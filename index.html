@@ -1,0 +1,3902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NODUS CALD</title>
+<meta name="description" content="Controle de Produção · Calderaria">
+<meta name="theme-color" content="#f97316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NODUS CALD">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23f97316'/><text y='.9em' font-size='55' x='10' font-weight='bold' fill='white'>NC</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--panel:#1e2230;--border:#2a2f3f;--border2:#353c50;--accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--prep:#3b82f6;--mont:#22c55e;--sold:#f97316;--acab:#a855f7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{overflow-x:hidden}
+.brand{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.brand-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:2px;color:var(--accent)}
+.brand-sub{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.nav{padding:10px 0;flex:1}
+.nav-sec{padding:8px 20px 4px;font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--text);background:var(--bg3);border-left-color:var(--accent)}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;letter-spacing:1px;flex:1}
+.topbar-os{background:var(--bg3);border:1px solid var(--border2);padding:5px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent)}
+.page{display:none;padding:24px 28px}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:3px solid var(--kc,var(--accent))}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.kpi-value{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;line-height:1;margin-top:4px}
+.kpi-unit{font-size:11px;color:var(--text2);margin-top:2px}
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:6px}
+.sh h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:1px;text-transform:uppercase}
+.sh-line{flex:1;height:1px;background:var(--border)}
+.tbl-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--bg3);padding:9px 13px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border:none}
+tbody tr:hover{background:var(--bg3)}
+td{padding:9px 13px;font-size:13px}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;transition:all .15s}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{opacity:.9}
+.btn-s{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}.btn-s:hover{color:var(--text)}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{opacity:.9}
+.btn-b{background:var(--blue);color:#fff}.btn-b:hover{opacity:.9}
+.btn-sm{padding:5px 11px;font-size:12px}
+.ig{margin-bottom:13px}
+.ig label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:44px 28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);margin-bottom:20px}
+.upload-zone:hover{border-color:var(--accent);background:rgba(249,115,22,.05)}
+.upload-icon{font-size:44px;margin-bottom:10px}
+.upload-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
+.upload-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.pbar{background:var(--bg3);border-radius:99px;height:7px;overflow:hidden;margin-top:5px}
+.pfill{height:100%;border-radius:99px;transition:width .4s}
+.setor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:24px}
+.sc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;border-left:4px solid var(--sc,var(--accent))}
+.sc-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--sc,var(--accent))}
+.sc-row{display:flex;justify-content:space-between;margin-top:9px;font-size:12px}
+.sc-row span:first-child{color:var(--text3)}
+.sc-row span:last-child{font-weight:600;font-family:'JetBrains Mono',monospace}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:12px;padding:26px;width:min(580px,96vw);max-height:92vh;overflow-y:auto}
+.modal-lg{width:min(700px,97vw)}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;letter-spacing:1px;margin-bottom:18px;color:var(--accent)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.tp{background:rgba(59,130,246,.15);color:var(--prep)}
+.tm{background:rgba(34,197,94,.15);color:var(--mont)}
+.ts{background:rgba(249,115,22,.15);color:var(--sold)}
+.ta{background:rgba(168,85,247,.15);color:var(--acab)}
+.badge-busy{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-free{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px}
+.tab{padding:8px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.op-check-lbl{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:7px 13px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;user-select:none}
+.op-check-lbl.on{border-color:var(--accent);color:var(--text);background:rgba(249,115,22,.08)}
+.op-check-lbl input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+.sec-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.spill{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border2);background:var(--bg3);color:var(--text3);transition:all .12s;user-select:none}
+.spill.on-prep{background:rgba(59,130,246,.2);color:var(--prep);border-color:var(--prep)}
+.spill.on-mont{background:rgba(34,197,94,.2);color:var(--mont);border-color:var(--mont)}
+.spill.on-sold{background:rgba(249,115,22,.2);color:var(--sold);border-color:var(--sold)}
+.spill.on-acab{background:rgba(168,85,247,.2);color:var(--acab);border-color:var(--acab)}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:1px}
+.cal-nav{background:var(--bg);border:1px solid var(--border2);color:var(--text2);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.cal-nav:hover{color:var(--text);border-color:var(--accent)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dh{text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:3px 0;text-transform:uppercase}
+.cal-d{aspect-ratio:1;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:transform .12s;width:100%}
+.cal-d:hover{transform:scale(1.08)}
+.cal-d.work{background:rgba(34,197,94,.15);color:var(--green)}
+.cal-d.off{background:var(--bg);color:var(--text3)}
+.cal-d.holiday{background:rgba(239,68,68,.15);color:var(--red)}
+.cal-d.today{outline:2px solid var(--accent);outline-offset:1px}
+.cal-d.other{opacity:.3}
+.cal-legend{display:flex;gap:12px;margin-top:9px;flex-wrap:wrap}
+.cal-legend span{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px}
+.cal-legend span::before{content:'';width:10px;height:10px;border-radius:3px;display:inline-block}
+.lw::before{background:rgba(34,197,94,.3)}
+.lo::before{background:var(--bg);border:1px solid var(--border2)}
+.lh::before{background:rgba(239,68,68,.3)}
+.matrix-grid{display:grid;gap:0}
+.matrix-hdr{background:var(--bg3);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700}
+.matrix-cell{padding:8px 11px;font-size:12px;border-bottom:1px solid var(--border)}
+.mat-name{font-family:'JetBrains Mono',monospace;color:var(--blue)}
+.op-tog{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;font-size:14px;transition:all .15s;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.op-tog.on{background:rgba(34,197,94,.2);color:var(--green)}
+.op-tog.off{background:var(--bg3);color:var(--text3)}
+.des-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px}
+.des-code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);font-weight:700;min-width:130px}
+.des-info{flex:1;font-size:12px;color:var(--text2)}
+.des-kg{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green)}
+.op-avatar{width:32px;height:32px;border-radius:7px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;flex-shrink:0;color:var(--accent)}
+#toast{position:fixed;bottom:22px;right:22px;z-index:999;color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+.empty{text-align:center;padding:48px 24px;color:var(--text3)}
+  /* ── GANTT ── */
+  .gantt-row {
+    display:grid;
+    grid-template-columns: 160px 1fr;
+    gap:0;
+    border-bottom:1px solid var(--border);
+    min-height:38px;
+  }
+  .gantt-row:hover { background:rgba(255,255,255,.02); }
+  .gantt-label {
+    padding:0 12px;
+    display:flex; align-items:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--blue); font-weight:700;
+    border-right:1px solid var(--border);
+    position:sticky; left:0; background:var(--bg2); z-index:2;
+    gap:6px;
+  }
+  .gantt-label .gl-desc {
+    font-family:'Barlow',sans-serif; font-size:10px;
+    color:var(--text3); font-weight:400;
+  }
+  .gantt-bars {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:3px; padding:5px 8px; align-items:center;
+  }
+  .gantt-bar-wrap {
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .gantt-bar-label {
+    font-size:9px; color:var(--text3);
+    text-transform:uppercase; letter-spacing:.5px;
+  }
+  .gantt-bar-track {
+    background:var(--border2); border-radius:99px;
+    height:10px; overflow:hidden; position:relative;
+  }
+  .gantt-bar-fill {
+    height:100%; border-radius:99px;
+    transition:width .4s ease;
+    position:relative;
+  }
+  .gantt-bar-fill::after {
+    content:attr(data-pct);
+    position:absolute; right:4px; top:50%;
+    transform:translateY(-50%);
+    font-size:8px; font-weight:700; color:#fff;
+    white-space:nowrap;
+  }
+  .gantt-status-dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  }
+  .gantt-group-hdr {
+    background:var(--bg3); border-bottom:1px solid var(--border);
+    padding:6px 12px; display:flex; align-items:center; gap:8px;
+    font-size:10px; font-weight:700; color:var(--text3);
+    text-transform:uppercase; letter-spacing:1.5px;
+    position:sticky; left:0;
+  }
+  .gantt-col-hdr {
+    display:grid; grid-template-columns: 160px 1fr;
+    border-bottom:2px solid var(--border2);
+    position:sticky; top:0; background:var(--bg2); z-index:3;
+  }
+  .gantt-col-hdr-label {
+    padding:8px 12px; font-size:10px; font-weight:700;
+    color:var(--text3); text-transform:uppercase; letter-spacing:1px;
+    border-right:1px solid var(--border);
+  }
+  .gantt-col-hdr-bars {
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:3px; padding:8px;
+  }
+  .gantt-col-hdr-bars span {
+    font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.5px;
+    text-align:center;
+  }
+
+.empty-icon{font-size:40px;margin-bottom:12px}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE & TABLET
+   ═══════════════════════════════════════════════ */
+
+/* Mobile bottom nav bar */
+.mobile-nav {
+  display:none;
+  position:fixed; bottom:0; left:0; right:0; z-index:50;
+  background:var(--bg2); border-top:1px solid var(--border);
+  padding:8px 4px; padding-bottom:max(8px, env(safe-area-inset-bottom));
+  overflow-x:auto; white-space:nowrap;
+}
+.mobile-nav-btn {
+  display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+  padding:6px 12px; border-radius:8px; cursor:pointer;
+  font-size:9px; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:.5px; border:none;
+  background:none; transition:all .15s; min-width:56px;
+}
+.mobile-nav-btn.active { color:var(--accent); background:rgba(249,115,22,.12); }
+.mobile-nav-btn svg, .mobile-nav-btn .nav-icon { font-size:20px; line-height:1; }
+
+/* Hamburger button */
+.hamburger {
+  display:none; flex-direction:column; gap:4px; cursor:pointer;
+  padding:8px; border-radius:6px; background:var(--bg3); border:none;
+}
+.hamburger span {
+  width:20px; height:2px; background:var(--text2); border-radius:2px;
+  transition:all .2s;
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:39;
+}
+.sidebar-overlay.open { display:block; }
+
+/* ── Tablet (768px - 1024px) ── */
+@media (max-width: 1024px) {
+  .shell { grid-template-columns: 180px 1fr; }
+  .brand-name { font-size:16px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .page { padding:16px; }
+  .topbar { padding:10px 14px; }
+}
+
+/* ── Mobile (< 768px) ── */
+@media (max-width: 767px) {
+  /* Sidebar vira drawer */
+  .shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position:fixed; left:-100%; top:0; height:100vh; z-index:40;
+    width:260px; transition:left .25s ease; box-shadow:4px 0 20px rgba(0,0,0,.4);
+  }
+  .sidebar.open { left:0; }
+  .sidebar-overlay { display:none; }
+  .sidebar-overlay.open { display:block; }
+
+  /* Main fills full screen */
+  .main { width:100%; }
+  .page {
+    padding:12px; padding-bottom:80px; /* space for bottom nav */
+  }
+
+  /* Topbar */
+  .topbar {
+    padding:8px 12px; gap:6px; flex-wrap:wrap;
+  }
+  .topbar-os { font-size:11px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topbar-title { font-size:14px; }
+  #sync-btn span, .topbar .btn-s span { display:none; }
+
+  /* Hide desktop sidebar nav, show mobile bottom nav */
+  .mobile-nav { display:flex; gap:0; }
+  .hamburger { display:flex; }
+
+  /* KPI grid — 2 col mobile */
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap:8px; }
+  .kpi { padding:12px; }
+  .kpi-value { font-size:24px; }
+
+  /* Gantt — scrollable */
+  .gantt-label { width:100px; font-size:9px; }
+  .gantt-col-hdr { grid-template-columns: 100px 1fr; }
+  .gantt-row { grid-template-columns: 100px 1fr; }
+
+  /* Sections */
+  .sh { flex-wrap:wrap; gap:8px; }
+  .sh h2 { font-size:14px; }
+
+  /* Tables scroll horizontal */
+  .tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { min-width:500px; }
+
+  /* Modal full screen on mobile */
+  .modal { width:100% !important; max-height:92vh; border-radius:14px 14px 0 0; }
+  .modal-ov { align-items:flex-end; padding:0; }
+
+  /* Planejamento grid */
+  #page-planejamento > div:nth-child(2) { grid-template-columns:1fr !important; }
+
+  /* Row2 grid */
+  .row2 { grid-template-columns:1fr; }
+
+  /* Setor cards */
+  .setor-grid-cald { grid-template-columns:1fr 1fr; }
+
+  /* Prep lotes wrap */
+  #prep-lotes-wrap { max-height:none; }
+
+  /* Gantt charts */
+  #gantt-charts { grid-template-columns:1fr 1fr !important; }
+}
+
+/* ── Small mobile (< 400px) ── */
+@media (max-width: 400px) {
+  .kpi-grid { grid-template-columns:1fr; }
+  #gantt-charts { grid-template-columns:1fr !important; }
+  .mobile-nav-btn { padding:6px 8px; min-width:44px; font-size:8px; }
+}
+
+/* ── Safe area (iPhone notch) ── */
+@supports (padding: max(0px)) {
+  .topbar { padding-top:max(10px, env(safe-area-inset-top)); }
+  .mobile-nav { padding-bottom:max(8px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-name">NODUS CALD</div>
+    <div class="brand-sub">Calderaria · Apontamento</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Geral</div>
+    <div class="nav-item" onclick="goPage('minhasOS')"><div class="nav-dot" style="background:var(--accent)"></div>Minhas OS</div>
+    <div class="nav-item" onclick="goPage('dashboard')"><div class="nav-dot" style="background:#94a3b8"></div>Dashboard</div>
+    <div class="nav-item" onclick="goPage('os')"><div class="nav-dot" style="background:var(--blue)"></div>Ordem de Serviço</div>
+    <div class="nav-sec">Setores</div>
+    <div class="nav-item" onclick="goPage('preparativo')"><div class="nav-dot" style="background:var(--prep)"></div>Preparativo</div>
+    <div class="nav-item" onclick="goPage('montagem')"><div class="nav-dot" style="background:var(--mont)"></div>Montagem</div>
+    <div class="nav-item" onclick="goPage('solda')"><div class="nav-dot" style="background:var(--sold)"></div>Solda</div>
+    <div class="nav-item" onclick="goPage('acabamento')"><div class="nav-dot" style="background:var(--acab)"></div>Acabamento</div>
+    <div class="nav-sec">Config</div>
+    <div class="nav-item" onclick="goPage('equipe')"><div class="nav-dot" style="background:var(--yellow)"></div>Equipe de Trabalho</div>
+    <div class="nav-item" onclick="goPage('planejamento')"><div class="nav-dot" style="background:#10b981"></div>Planejamento</div>
+    <div class="nav-item" onclick="goPage('cronograma')"><div class="nav-dot" style="background:#06b6d4"></div>Cronograma Gantt</div>
+    <div class="nav-item" onclick="goPage('relatorio')"><div class="nav-dot" style="background:var(--purple)"></div>Relatório / Export</div>
+  </nav>
+  <div style="padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">v2.0 · Dados locais</div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-os" id="topbar-os" onclick="goPage('minhasOS')" 
+     title="Clique para trocar de OS" style="cursor:pointer" >Nenhuma OS</div>
+    <span id="topbar-empresa" style="font-size:11px;color:var(--text3)"></span>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)">
+        <span id="online-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block"></span>
+        <span id="online-lbl">Local</span>
+      </div>
+      <span id="topbar-user" style="font-size:11px;color:var(--text3)">Offline</span>
+      <button class="btn btn-s btn-sm" id="sync-btn" onclick="pushToServer()" title="Enviar novos apontamentos ao servidor" style="color:var(--blue)">☁ Sync</button>
+      <button class="btn btn-s btn-sm" id="pull-btn" onclick="doPull()" title="Buscar dados atualizados do servidor" style="color:var(--green)">↓ Pull</button>
+      <button class="btn btn-s btn-sm" onclick="SB_TOKEN?doLogout():openModal('modal-login')" id="login-toggle-btn" title="Login / Logout">🔑</button>
+    </div>
+    <button class="btn btn-s btn-sm" onclick="toggleFS()" title="Tela cheia" style="padding:7px 10px;font-size:14px;" id="fs-btn2">⛶</button>
+    <button class="btn btn-s btn-sm" onclick="S.os?novaOS():goPage('os')">+ OS</button>
+    <button class="btn btn-s btn-sm" id="install-btn" onclick="installPWA()" style="display:none;background:var(--accent);color:#fff" title="Instalar como app">📲 Instalar</button>
+  </div>
+
+  <!-- MINHAS OS -->
+  <div id="page-minhasOS" class="page">
+    <div class="sh"><h2>Minhas OS</h2><div class="sh-line"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-s btn-sm" onclick="renderMinhasOS()">↺ Atualizar</button>
+        <button class="btn btn-p btn-sm" onclick="novaOS()">+ Nova OS</button>
+      </div>
+    </div>
+    <!-- OS Cards grid -->
+    <div id="minhasOS-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px"></div>
+    <!-- Empty state -->
+    <div id="minhasOS-empty" class="empty" style="display:none">
+      <div class="empty-icon">📋</div>
+      <div>Nenhuma OS no servidor ainda.<br>Carregue um plano de corte e sincronize.</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div id="dash-empty" class="empty"><div class="empty-icon">📊</div><div>Carregue um plano de corte em <strong>Ordem de Serviço</strong> para começar.</div></div>
+    <div id="dash-content" style="display:none">
+      <div class="kpi-grid" id="dash-kpis"></div>
+      <div class="sh"><h2>Progresso por Setor</h2><div class="sh-line"></div></div>
+      <div class="setor-grid" id="dash-setores"></div>
+      <div class="sh"><h2>Apontamentos Recentes</h2><div class="sh-line"></div></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Hora</th><th>Operador</th><th>Setor</th><th>Item</th><th>Peso</th><th>Status</th></tr></thead>
+        <tbody id="dash-recent"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- OS -->
+  <div id="page-os" class="page">
+    <div id="os-form-area">
+      <div class="sh"><h2>Nova Ordem de Serviço</h2><div class="sh-line"></div></div>
+      <div class="row2" style="margin-bottom:14px">
+        <div class="ig"><label>Número da OS</label><input class="inp" id="os-num" placeholder="OS-001"></div>
+        <div class="ig"><label>Cliente</label><input class="inp" id="os-cli" placeholder="Nome do cliente"></div>
+      </div>
+      <div class="row2" style="margin-bottom:14px">
+        <div class="ig"><label>Produto / Descrição</label><input class="inp" id="os-prod" placeholder="Descrição"></div>
+        <div class="ig"><label>Prazo de Entrega</label><input class="inp" type="date" id="os-prazo"></div>
+      </div>
+      <div class="upload-zone" id="drop-zone">
+        <input type="file" id="file-inp" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">Arraste o Plano de Corte aqui</div>
+        <div class="upload-sub">Clique para selecionar · Formato .xlsx (modelo OS 1608)</div>
+      </div>
+      <div class="sh"><h2>Configuração da OS</h2><div class="sh-line"></div></div>
+      
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">Operações do Preparativo</div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px">
+          🔩 Materiais <strong>CH / PL (chapas)</strong> terão automaticamente as operações <strong>Corte CNC + Dobra/Conformação</strong>.
+          Os demais materiais seguem as operações padrão abaixo.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:0" id="ops-base">
+          <label class="op-check-lbl on"><input type="checkbox" class="op-chk" value="Cortar" checked> Cortar</label>
+          <label class="op-check-lbl"><input type="checkbox" class="op-chk" value="Dobrar"> Dobrar</label>
+          <label class="op-check-lbl"><input type="checkbox" class="op-chk" value="Furar"> Furar</label>
+          <div style="display:flex;gap:7px;align-items:center">
+            <input class="inp" id="op-extra-inp" placeholder="+ Operação extra" style="width:180px">
+            <button class="btn btn-s btn-sm" onclick="addOpExtra()">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-g" onclick="iniciarProcessamento()">✓ Processar Plano e Revisar Tarefas</button>
+    </div>
+    <div id="os-loaded" style="display:none">
+      <div class="sh"><h2>OS Carregada</h2><div class="sh-line"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-p btn-sm" onclick="novaOS()">+ Nova OS</button>
+          <button class="btn btn-s btn-sm" onclick="editarOS()">✏️ Editar</button>
+          <button class="btn btn-s btn-sm" onclick="confirmarDeleteOS()" style="color:var(--red);">🗑 Excluir</button>
+        </div>
+      </div>
+      <div class="kpi-grid" id="os-kpis"></div>
+      <div class="sh"><h2>Lotes do Preparativo (primeiros 20)</h2><div class="sh-line"></div></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Material</th><th>Comp (mm)</th><th>Qtd</th><th>Peso/pç (kg)</th><th>Peso Total</th><th>Tarefas</th></tr></thead>
+        <tbody id="os-mat-tbody"></tbody>
+      </table></div>
+      <div class="sh"><h2>Desenhos (Montagem › Solda › Acabamento)</h2><div class="sh-line"></div></div>
+      <div class="tbl-wrap" style="max-height:360px;overflow-y:auto"><table>
+        <thead><tr><th>Desenho</th><th>Itens</th><th>Peso (kg)</th><th>Montagem</th><th>Solda</th><th>Acabamento</th></tr></thead>
+        <tbody id="os-des-tbody"></tbody>
+      </table></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-s" onclick="resetOS()">↺ Nova OS</button>
+        <button class="btn btn-b" onclick="exportExcel()">⬇ Exportar Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREPARATIVO -->
+  <div id="page-preparativo" class="page">
+    <div class="sh"><h2>Preparativo</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="openModal('modal-prep')">+ Apontamento</button>
+    </div>
+    <div id="prep-cnc-wrap"></div>
+    <div class="kpi-grid" id="prep-kpis"></div>
+    <div class="sh"><h2>Progresso dos Lotes</h2><div class="sh-line"></div></div>
+    <!-- Filtros + bulk action -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 14px;background:var(--panel);border-radius:8px;border:1px solid var(--border)">
+      <input class="inp" id="prep-lote-search" placeholder="Buscar material..." oninput="renderPrepLotes(document.getElementById('prep-lote-search').value)" style="width:180px;padding:6px 10px;font-size:12px">
+      <select class="inp" id="prep-lote-op-filter" onchange="renderPrepLotes(document.getElementById('prep-lote-search').value)" style="width:160px;padding:6px 10px;font-size:12px">
+        <option value="">Todas operações</option>
+        <option value="Cortar comprimento">Cortar comprimento</option>
+        <option value="Traçagem">Traçagem</option>
+        <option value="Corte furo">Corte furo</option>
+        <option value="Corte">Corte</option>
+        <option value="Dobra">Dobra</option>
+      </select>
+      <select class="inp" id="prep-lote-status-filter" onchange="renderPrepLotes(document.getElementById('prep-lote-search').value)" style="width:150px;padding:6px 10px;font-size:12px">
+        <option value="">Todos</option>
+        <option value="pendente">Pendentes</option>
+        <option value="concluido">Concluídos</option>
+      </select>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <span id="prep-sel-count" style="font-size:11px;color:var(--text3)">0 selecionados</span>
+        <button class="btn btn-g btn-sm" id="prep-bulk-btn" onclick="bulkConcluir()" style="display:none">✅ Concluir Selecionados</button>
+        <button class="btn btn-s btn-sm" onclick="toggleSelectAll()">Selecionar Todos</button>
+      </div>
+    </div>
+    <div id="prep-lotes-wrap" style="max-height:460px;overflow-y:auto;margin-bottom:24px"></div>
+    <div class="sh"><h2>Histórico de Apontamentos</h2><div class="sh-line"></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Data/Hora</th><th>Operador</th><th>Operação · Lote</th><th>Qtd</th><th>KG</th><th>Turno</th><th>Status</th></tr></thead>
+      <tbody id="prep-hist"></tbody>
+    </table></div>
+  </div>
+
+  <!-- MONTAGEM -->
+  <div id="page-montagem" class="page">
+    <div class="sh"><h2>Montagem</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="openDesenhoModal('Montagem')">+ Concluir Desenho</button>
+    </div>
+    <div class="kpi-grid" id="mont-kpis"></div>
+    <div class="sh"><h2>Desenhos</h2><div class="sh-line"></div></div>
+    <div id="mont-des-list"></div>
+    <div class="sh"><h2>Histórico</h2><div class="sh-line"></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Data/Hora</th><th>Operador</th><th>Desenho</th><th>Peso (kg)</th><th>Turno</th><th>Status</th></tr></thead>
+      <tbody id="mont-hist"></tbody>
+    </table></div>
+  </div>
+
+  <!-- SOLDA -->
+  <div id="page-solda" class="page">
+    <div class="sh"><h2>Solda</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="openDesenhoModal('Solda')">+ Concluir Desenho</button>
+    </div>
+    <div class="kpi-grid" id="sold-kpis"></div>
+    <div class="sh"><h2>Desenhos</h2><div class="sh-line"></div></div>
+    <div id="sold-des-list"></div>
+    <div class="sh"><h2>Histórico</h2><div class="sh-line"></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Data/Hora</th><th>Operador</th><th>Desenho</th><th>Peso (kg)</th><th>Turno</th><th>Status</th></tr></thead>
+      <tbody id="sold-hist"></tbody>
+    </table></div>
+  </div>
+
+  <!-- ACABAMENTO -->
+  <div id="page-acabamento" class="page">
+    <div class="sh"><h2>Acabamento</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="openDesenhoModal('Acabamento')">+ Concluir Desenho</button>
+    </div>
+    <div class="kpi-grid" id="acab-kpis"></div>
+    <div class="sh"><h2>Desenhos</h2><div class="sh-line"></div></div>
+    <div id="acab-des-list"></div>
+    <div class="sh"><h2>Histórico</h2><div class="sh-line"></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Data/Hora</th><th>Operador</th><th>Desenho</th><th>Peso (kg)</th><th>Turno</th><th>Status</th></tr></thead>
+      <tbody id="acab-hist"></tbody>
+    </table></div>
+  </div>
+
+  <!-- EQUIPE DE TRABALHO -->
+  <div id="page-equipe" class="page">
+    <div class="sh"><h2>Equipe de Trabalho</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="openModal('modal-equipe')">+ Configurar Turno</button>
+    </div>
+    <!-- KPIs rápidos -->
+    <div class="kpi-grid" id="equipe-kpis" style="margin-bottom:20px"></div>
+    <!-- Escala por setor -->
+    <div id="equipe-setores" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px"></div>
+    <!-- Histórico de escalas -->
+    <div class="sh"><h2>Histórico de Escalas</h2><div class="sh-line"></div></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Data</th><th>Setor</th><th>Turno</th><th>Qtd Operadores</th><th>Horário</th><th>Obs</th><th></th></tr></thead>
+      <tbody id="equipe-hist-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- PLANEJAMENTO -->
+  <div id="page-planejamento" class="page">
+    <div class="sh"><h2>Planejamento & Capacidade</h2><div class="sh-line"></div>
+      <button class="btn btn-p btn-sm" onclick="calcularCronograma()">⚙ Calcular Cronograma</button>
+    </div>
+
+    <!-- Config panel -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+      <!-- Datas -->
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📅 Período da OS</div>
+        <div class="row2">
+          <div class="ig"><label>Data de Início</label>
+            <input class="inp" type="date" id="plan-inicio">
+          </div>
+          <div class="ig"><label>Prazo de Entrega</label>
+            <input class="inp" type="date" id="plan-prazo">
+          </div>
+        </div>
+        <div class="ig" style="margin-bottom:0">
+          <label>Dias úteis/semana</label>
+          <select class="inp" id="plan-dias-semana">
+            <option value="5">5 dias (Seg–Sex)</option>
+            <option value="6">6 dias (Seg–Sáb)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Capacidade por setor -->
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">👷 Capacidade por Setor</div>
+        <div style="display:grid;gap:8px">
+          <div style="display:grid;grid-template-columns:120px 80px 80px 90px;gap:8px;align-items:center">
+            <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase">Setor</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase">Operad.</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase">H/dia</span>
+            <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase">kg/h/op</span>
+          </div>
+          <div style="display:grid;grid-template-columns:120px 80px 80px 90px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;font-weight:700;color:var(--prep)">⚙ Preparativo</span>
+            <input class="inp" type="number" id="cap-prep-op" value="3" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-prep-h" value="9" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-prep-kg" value="15" min="0.1" step="0.1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+          </div>
+          <div style="display:grid;grid-template-columns:120px 80px 80px 90px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;font-weight:700;color:var(--mont)">🔧 Montagem</span>
+            <input class="inp" type="number" id="cap-mont-op" value="4" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-mont-h" value="9" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-mont-kg" value="12" min="0.1" step="0.1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+          </div>
+          <div style="display:grid;grid-template-columns:120px 80px 80px 90px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;font-weight:700;color:var(--sold)">🔥 Solda</span>
+            <input class="inp" type="number" id="cap-sold-op" value="2" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-sold-h" value="9" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-sold-kg" value="8" min="0.1" step="0.1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+          </div>
+          <div style="display:grid;grid-template-columns:120px 80px 80px 90px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)">
+            <span style="font-size:12px;font-weight:700;color:var(--acab)">✨ Acabamento</span>
+            <input class="inp" type="number" id="cap-acab-op" value="2" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-acab-h" value="9" min="1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+            <input class="inp" type="number" id="cap-acab-kg" value="10" min="0.1" step="0.1" style="padding:5px 8px;font-size:12px" oninput="calcPrevDias()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview rápido -->
+    <div id="plan-preview" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px"></div>
+
+    <!-- Alerta de prazo -->
+    <div id="plan-alerta" style="display:none;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;font-weight:600"></div>
+
+    <!-- Cronograma calculado -->
+    <div id="plan-resultado" style="display:none">
+      <div class="sh"><h2>Cronograma Calculado</h2><div class="sh-line"></div></div>
+
+      <!-- Timeline por setor -->
+      <div id="plan-timeline" style="margin-bottom:24px"></div>
+
+      <!-- Gantt por desenho com datas -->
+      <div class="sh"><h2>Sequência por Desenho</h2><div class="sh-line"></div>
+        <span style="font-size:11px;color:var(--text3)" id="plan-des-count"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <div id="plan-gantt-des"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRONOGRAMA GANTT -->
+  <div id="page-cronograma" class="page">
+    <div class="sh"><h2>Cronograma Gantt</h2><div class="sh-line"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp" id="gantt-search" placeholder="Buscar desenho..." oninput="renderGantt()" style="width:200px;padding:6px 10px;font-size:12px">
+        <select class="inp" id="gantt-filter" onchange="renderGantt()" style="width:160px;padding:6px 10px;font-size:12px">
+          <option value="todos">Todos</option>
+          <option value="em_andamento">Em Andamento</option>
+          <option value="concluido">Concluídos</option>
+          <option value="pendente">Pendentes</option>
+        </select>
+      </div>
+    </div>
+    <!-- Setor Charts -->
+    <div id="gantt-charts" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px"></div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--panel);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:1px;align-self:center">Legenda:</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--prep);display:inline-block"></span>Preparativo</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--mont);display:inline-block"></span>Montagem</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--sold);display:inline-block"></span>Solda</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--acab);display:inline-block"></span>Acabamento</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--border2);display:inline-block"></span>Pendente</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="width:12px;height:12px;border-radius:3px;background:var(--green);display:inline-block"></span>Concluído</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="gantt-summary"></span>
+    </div>
+    <!-- Gantt container -->
+    <div id="gantt-wrap" style="overflow-x:auto">
+      <div id="gantt-content"></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div id="page-relatorio" class="page">
+    <div class="sh"><h2>Relatório & Export</h2><div class="sh-line"></div></div>
+    <div class="row2">
+      <div>
+        <div class="sh"><h2>Por Setor</h2><div class="sh-line"></div></div>
+        <div id="rel-setores"></div>
+      </div>
+      <div>
+        <div class="sh"><h2>Por Operador</h2><div class="sh-line"></div></div>
+        <div id="rel-ops"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-g" onclick="exportExcel()">⬇ Excel Completo</button>
+      <button class="btn btn-s" onclick="exportJSON()">⬇ Backup JSON</button>
+      <button class="btn btn-s" onclick="document.getElementById('json-inp').click()">⬆ Restaurar JSON</button>
+      <input type="file" id="json-inp" accept=".json" style="display:none" onchange="importJSON(this)">
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- MODAL: MATRIZ DE TAREFAS -->
+<div class="modal-ov" id="modal-matrix">
+  <div class="modal modal-lg">
+    <div class="modal-title">📦 Lotes do Preparativo — Confirmar</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Lotes gerados automaticamente agrupando material + comprimento. Cada lote com dobra gera 2 tarefas (Cortar + Dobrar). Verifique e confirme.</p>
+    <div style="overflow:auto;max-height:50vh">
+      <div id="matrix-content"></div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text3)">Tarefas que serão criadas: <strong id="matrix-count" style="color:var(--accent)">0</strong></div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-matrix')">Cancelar</button>
+      <button class="btn btn-g" onclick="confirmarTarefas()">✓ Confirmar Tarefas e Criar OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: APONTAMENTO PREPARATIVO -->
+<div class="modal-ov" id="modal-prep">
+  <div class="modal" style="width:min(620px,97vw)">
+    <div class="modal-title">📋 Apontamento Fim de Turno — Preparativo</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Registre ao fim do turno o que foi concluído. Marque a operação como concluída ou informe a quantidade parcial produzida.</p>
+    <div class="row2">
+      <div class="ig"><label>Operador</label><select class="inp" id="prep-op"></select></div>
+      <div class="ig"><label>Turno</label>
+        <select class="inp" id="prep-turno">
+          <option value="Diurno">Diurno (07h–12h / 13h–17h)</option>
+          <option value="Noturno">Noturno (19h–22h / 23h–05h)</option>
+        </select>
+      </div>
+    </div>
+    <div class="ig"><label>Operação</label>
+      <select class="inp" id="prep-op-tipo" onchange="onOpTipoChange()"></select>
+    </div>
+    <div class="ig"><label>Lote (Material | Comprimento)</label>
+      <select class="inp" id="prep-lote" onchange="onLoteChange()"></select>
+    </div>
+    <!-- Lote info card -->
+    <div id="prep-lote-info" style="display:none;background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px;border-left:3px solid var(--blue)">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+        <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Qtd do Lote</div><div id="lote-qtd-total" style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',sans-serif"></div></div>
+        <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Peso/peça</div><div id="lote-peso-unit" style="font-size:18px;font-weight:700;color:var(--yellow);font-family:'Barlow Condensed',sans-serif"></div></div>
+        <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Peso Lote</div><div id="lote-peso-total" style="font-size:18px;font-weight:700;color:var(--green);font-family:'Barlow Condensed',sans-serif"></div></div>
+        <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Já Produzido</div><div id="lote-ja-prod" style="font-size:18px;font-weight:700;color:var(--accent);font-family:'Barlow Condensed',sans-serif"></div></div>
+      </div>
+      <div style="margin-top:8px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Progresso da Operação</div>
+        <div style="background:var(--bg);border-radius:99px;height:6px;overflow:hidden">
+          <div id="lote-prog-bar" style="height:100%;border-radius:99px;background:var(--green);transition:width .3s;width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seleção de conclusão -->
+    <div style="margin-bottom:14px">
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+                    background:var(--bg3);border-radius:10px;padding:16px 20px;
+                    border:2px solid var(--border);transition:all .2s"
+             id="lbl-concluido" onclick="toggleConcluido()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span id="conc-icon" style="font-size:28px">⬜</span>
+          <div>
+            <div id="conc-label" style="font-weight:700;font-size:15px;color:var(--text2)">Marcar como Concluído</div>
+            <div style="font-size:11px;color:var(--text3)">100% da operação finalizada neste turno</div>
+          </div>
+        </div>
+        <div id="conc-badge" style="display:none;background:rgba(34,197,94,.15);color:var(--green);
+             padding:6px 16px;border-radius:20px;font-weight:700;font-size:13px">CONCLUÍDO</div>
+      </label>
+      <input type="hidden" id="prep-modo-conc-val" value="0">
+    </div>
+    <!-- inputs hidden mas necessários para compatibilidade -->
+    <input type="hidden" id="prep-qtd" value="0">
+    <input type="hidden" id="prep-kg-calc" value="">
+    <input type="hidden" id="prep-modo-conc" value="concluido">
+    <input type="hidden" id="prep-modo-parc" value="">
+
+    <div class="ig"><label>Observação</label><input class="inp" id="prep-obs" placeholder="Opcional"></div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-prep')">Cancelar</button>
+      <button class="btn btn-p" onclick="savePrepApt()">Salvar Apontamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONCLUIR DESENHO -->
+<div class="modal-ov" id="modal-des">
+  <div class="modal">
+    <div class="modal-title" id="modal-des-title">📐 Concluir Desenho</div>
+    <input type="hidden" id="des-setor">
+    <div class="row2">
+      <div class="ig"><label>Operador</label><select class="inp" id="des-op"></select></div>
+      <div class="ig"><label>Turno</label><select class="inp" id="des-turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div>
+    </div>
+    <div class="ig"><label>Desenho</label><select class="inp" id="des-desenho" onchange="showDesInfo()"></select></div>
+    <div id="des-info-box" style="display:none;background:var(--bg3);border-radius:8px;padding:11px;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Itens do Desenho</div>
+      <div id="des-info-content"></div>
+    </div>
+    <div class="ig"><label>Observação</label><input class="inp" id="des-obs" placeholder="Opcional"></div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-des')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveDesApt()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OPERADOR -->
+<div class="modal-ov" id="modal-op">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="modal-op-title">👷 Cadastrar Operador</div>
+    <input type="hidden" id="op-edit-id">
+    <div class="tabs">
+      <div class="tab active" data-tab="tab-dados" onclick="switchTab(this)">Dados</div>
+      <div class="tab" data-tab="tab-setores" onclick="switchTab(this)">Setores & Turno</div>
+      <div class="tab" data-tab="tab-cal" onclick="switchTab(this)">Calendário</div>
+    </div>
+    <div class="tab-panel active" id="tab-dados">
+      <div class="ig"><label>Nome Completo</label><input class="inp" id="op-nome" placeholder="Nome do operador"></div>
+      <div class="row2">
+        <div class="ig"><label>Horas / Dia</label><input class="inp" type="number" id="op-hdia" value="8"></div>
+        <div class="ig"><label>Salário Base (R$)</label><input class="inp" type="number" id="op-sal" placeholder="0.00"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-setores">
+      <div class="ig"><label>Setor Principal</label>
+        <select class="inp" id="op-setor">
+          <option>Preparativo</option><option>Montagem</option><option>Solda</option><option>Acabamento</option>
+        </select>
+      </div>
+<!-- turno definido na aba Calendário -->
+      <div class="ig">
+        <label>Setores Secundários <span style="color:var(--text3);font-weight:400;text-transform:none">(pode atuar quando necessário)</span></label>
+        <div class="sec-pills">
+          <div class="spill" data-s="Preparativo" onclick="togglePill(this)">Preparativo</div>
+          <div class="spill" data-s="Montagem" onclick="togglePill(this)">Montagem</div>
+          <div class="spill" data-s="Solda" onclick="togglePill(this)">Solda</div>
+          <div class="spill" data-s="Acabamento" onclick="togglePill(this)">Acabamento</div>
+        </div>
+        <p style="font-size:11px;color:var(--text3);margin-top:7px">Setor principal já incluído. O operador aparece nos apontamentos de todos os setores marcados.</p>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-cal">
+      <!-- Turno Selection -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Turno de Trabalho</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;background:var(--bg3);border-radius:8px;padding:12px;border:2px solid var(--border);transition:all .15s" id="lbl-turno-d">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="radio" name="op-turno-tipo" value="Diurno" id="cal-turno-diurno" checked onchange="onCalTurnoChange()" style="accent-color:var(--blue);width:15px;height:15px">
+              <span style="font-weight:700;font-size:13px;color:var(--blue)">☀️ Diurno</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-left:23px">07h–12h · 13h–17h</div>
+            <div style="font-size:9px;color:var(--text3);margin-left:23px">Sem hora extra</div>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;cursor:pointer;background:var(--bg3);border-radius:8px;padding:12px;border:2px solid var(--border);transition:all .15s" id="lbl-turno-n">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="radio" name="op-turno-tipo" value="Noturno" id="cal-turno-noturno" onchange="onCalTurnoChange()" style="accent-color:var(--purple);width:15px;height:15px">
+              <span style="font-weight:700;font-size:13px;color:var(--purple)">🌙 Noturno</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-left:23px">19h–22h · 23h–05h</div>
+            <div style="font-size:9px;color:var(--text3);margin-left:23px">Sem hora extra</div>
+          </label>
+        </div>
+        <!-- Horas calculadas -->
+        <div id="cal-horas-info" style="background:var(--bg3);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text2);border-left:3px solid var(--blue)">
+          ☀️ Diurno: <strong>9h/dia</strong> (4h manhã + 5h tarde, intervalos excluídos)
+        </div>
+      </div>
+
+      <!-- Presets de dias -->
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-s btn-sm" onclick="calPreset('seg-sex')">Seg–Sex</button>
+        <button class="btn btn-s btn-sm" onclick="calPreset('seg-sab')">Seg–Sáb</button>
+        <button class="btn btn-s btn-sm" onclick="calPreset('todos')">Todos os dias</button>
+        <button class="btn btn-s btn-sm" onclick="calPreset('limpar')">Limpar Mês</button>
+        <button class="btn btn-s btn-sm" onclick="calPreset('limpar-tudo')" style="color:var(--red)">Zerar Tudo</button>
+      </div>
+
+      <!-- Grade do calendário -->
+      <div class="cal-hdr">
+        <button class="cal-nav" onclick="calNav(-1)">‹</button>
+        <div class="cal-month" id="cal-month-lbl"></div>
+        <button class="cal-nav" onclick="calNav(1)">›</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px">
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="cal-legend" style="margin-top:8px">
+        <span class="lw">Dia útil</span><span class="lo">Folga / DSR</span><span class="lh">Feriado</span>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3)">
+        Clique no dia para alternar: 🟢 Trabalho → ⬛ Folga → 🔴 Feriado
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-op')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveOp()">Salvar Operador</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: CONFIGURAR TURNO -->
+<div class="modal-ov" id="modal-equipe">
+  <div class="modal" style="width:min(560px,97vw)">
+    <div class="modal-title">👷 Configurar Escala de Turno</div>
+    <div class="row2">
+      <div class="ig"><label>Data</label>
+        <input class="inp" type="date" id="eq-data">
+      </div>
+      <div class="ig"><label>Turno</label>
+        <select class="inp" id="eq-turno">
+          <option value="Diurno">☀️ Diurno (07h–12h / 13h–17h)</option>
+          <option value="Noturno">🌙 Noturno (19h–22h / 23h–05h)</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Operadores por Setor</div>
+      <div style="display:grid;gap:10px">
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Setor</span>
+          <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Qtd Operadores</span>
+          <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase">Nomes (opcional)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;align-items:center;padding:8px;background:var(--bg3);border-radius:7px;border-left:3px solid var(--prep)">
+          <span style="font-size:13px;font-weight:700;color:var(--prep)">⚙ Preparativo</span>
+          <input class="inp" type="number" id="eq-qt-prep" min="0" value="0" style="padding:7px">
+          <input class="inp" id="eq-nm-prep" placeholder="João, Maria..." style="padding:7px;font-size:12px">
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;align-items:center;padding:8px;background:var(--bg3);border-radius:7px;border-left:3px solid var(--mont)">
+          <span style="font-size:13px;font-weight:700;color:var(--mont)">🔧 Montagem</span>
+          <input class="inp" type="number" id="eq-qt-mont" min="0" value="0" style="padding:7px">
+          <input class="inp" id="eq-nm-mont" placeholder="Nomes..." style="padding:7px;font-size:12px">
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;align-items:center;padding:8px;background:var(--bg3);border-radius:7px;border-left:3px solid var(--sold)">
+          <span style="font-size:13px;font-weight:700;color:var(--sold)">🔥 Solda</span>
+          <input class="inp" type="number" id="eq-qt-sold" min="0" value="0" style="padding:7px">
+          <input class="inp" id="eq-nm-sold" placeholder="Nomes..." style="padding:7px;font-size:12px">
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;align-items:center;padding:8px;background:var(--bg3);border-radius:7px;border-left:3px solid var(--acab)">
+          <span style="font-size:13px;font-weight:700;color:var(--acab)">✨ Acabamento</span>
+          <input class="inp" type="number" id="eq-qt-acab" min="0" value="0" style="padding:7px">
+          <input class="inp" id="eq-nm-acab" placeholder="Nomes..." style="padding:7px;font-size:12px">
+        </div>
+      </div>
+    </div>
+    <div class="ig"><label>Observação</label>
+      <input class="inp" id="eq-obs" placeholder="Ex: Feriado, hora extra, rodízio...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-equipe')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEquipe()">Salvar Escala</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: LOGIN SUPABASE -->
+<div class="modal-ov" id="modal-login">
+  <div class="modal" style="width:min(440px,96vw)">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">NODUS CALD</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:1px">CALDERARIA · CONTROLE DE PRODUÇÃO</div>
+    </div>
+
+    <!-- Supabase config -->
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px;border:1px solid var(--border)">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+        Configuração Supabase
+        <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--blue);font-size:10px;margin-left:6px">↗ Abrir Dashboard</a>
+      </div>
+      <div class="ig" style="margin-bottom:8px">
+        <label>Project URL</label>
+        <input class="inp" id="login-apiurl" placeholder="https://xxxx.supabase.co"
+          style="font-size:12px;font-family:monospace">
+      </div>
+      <div class="ig" style="margin-bottom:0">
+        <label>Anon Public Key</label>
+        <input class="inp" id="login-anonkey" placeholder="eyJhbGci..."
+          style="font-size:11px;font-family:monospace">
+      </div>
+    </div>
+
+    <!-- Login -->
+    <div class="ig"><label>Email</label>
+      <input class="inp" id="login-email" placeholder="seu@email.com" type="email">
+    </div>
+    <div class="ig"><label>Senha</label>
+      <input class="inp" id="login-senha" placeholder="••••••••" type="password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="login-err" style="color:var(--red);font-size:12px;margin-bottom:10px;min-height:16px"></div>
+    <button class="btn btn-p" id="login-btn" onclick="doLogin()" style="width:100%;justify-content:center;padding:11px">
+      Conectar ao Supabase
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:10px">
+      Funciona offline com dados locais. Sincronize quando tiver conexão.
+    </p>
+  </div>
+</div>
+
+
+<!-- MODAL: EDITAR OS -->
+<div class="modal-ov" id="modal-edit-os">
+  <div class="modal" style="width:min(500px,97vw)">
+    <div class="modal-title">✏️ Editar Ordem de Serviço</div>
+    <div class="row2">
+      <div class="ig"><label>Número da OS</label>
+        <input class="inp" id="edit-os-num" placeholder="OS-001">
+      </div>
+      <div class="ig"><label>Cliente</label>
+        <input class="inp" id="edit-os-cli" placeholder="Nome do cliente">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="ig"><label>Produto / Descrição</label>
+        <input class="inp" id="edit-os-prod" placeholder="Descrição">
+      </div>
+      <div class="ig"><label>Prazo de Entrega</label>
+        <input class="inp" type="date" id="edit-os-prazo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-edit-os')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEditOS()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let S = { os: null, operadores: [], apontamentos: [], escalas: [] };
+let parsedXLSX = null;
+let calY = new Date().getFullYear(), calM = new Date().getMonth();
+let calData = {}; // { "YYYY-MM-DD": "work"|"off"|"holiday" }
+const SETORES = ['Preparativo','Montagem','Solda','Acabamento'];
+const SC = { Preparativo:'var(--prep)', Montagem:'var(--mont)', Solda:'var(--sold)', Acabamento:'var(--acab)' };
+const TC = { Preparativo:'tp', Montagem:'tm', Solda:'ts', Acabamento:'ta' };
+const PILL_CLS = { Preparativo:'on-prep', Montagem:'on-mont', Solda:'on-sold', Acabamento:'on-acab' };
+
+function loadS(){ try{ const d=localStorage.getItem('pt2'); if(d) S=JSON.parse(d); }catch(e){} }
+let _saveSTimer = null;
+function saveS(immediate) {
+  if(immediate) { localStorage.setItem('pt2', JSON.stringify(S)); return; }
+  clearTimeout(_saveSTimer);
+  _saveSTimer = setTimeout(() => localStorage.setItem('pt2', JSON.stringify(S)), 400);
+}
+loadS();
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+const PAGE_NAMES = { minhasOS:'Minhas OS', dashboard:'Dashboard', os:'Ordem de Serviço', preparativo:'Preparativo', montagem:'Montagem', solda:'Solda', acabamento:'Acabamento', equipe:'Equipe de Trabalho', relatorio:'Relatório', planejamento:'Planejamento & Capacidade', cronograma:'Cronograma Gantt' };
+
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) n.classList.add('active');
+  });
+  document.getElementById('topbar-title').textContent = PAGE_NAMES[id] || id;
+  if(id === 'preparativo') window._prepPage = 1;
+  renderPage(id);
+}
+
+function renderPage(id) {
+  if(id === 'minhasOS') renderMinhasOS();
+  else if(id === 'dashboard') renderDash();
+  else if(id === 'os') renderOS();
+  else if(id === 'preparativo') renderPrep();
+  else if(id === 'montagem') renderSetor('mont', 'Montagem');
+  else if(id === 'solda') renderSetor('sold', 'Solda');
+  else if(id === 'acabamento') renderSetor('acab', 'Acabamento');
+  else if(id === 'equipe') renderEquipe();
+  else if(id === 'planejamento') renderPlanejamento();
+  else if(id === 'cronograma') renderGantt();
+  else if(id === 'relatorio') renderRel();
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function fmtTs(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+
+function kgSetor(setor) {
+  return S.apontamentos.filter(a => a.setor === setor).reduce((s, a) => s + (a.peso || 0), 0);
+}
+
+function concluidos(setor) {
+  const set = new Set();
+  const osNum = S.os?.numero;
+  S.apontamentos
+    .filter(a => a.setor === setor
+              && (a.tipo === 'desenho' || a.ref)
+              && (!osNum || !a.osNumero || a.osNumero === osNum))
+    .forEach(a => set.add(a.ref));
+  return set;
+}
+
+function opSetores(o) {
+  if(!o) return [];
+  return (o.setoresSecundarios && o.setoresSecundarios.length) ? o.setoresSecundarios : [o.setor];
+}
+
+function atividadeAberta(opId) {
+  return S.apontamentos.find(a => a.operadorId === opId && a.emAberto) || null;
+}
+
+function opBloqueado(opId, setor) {
+  const ab = atividadeAberta(opId);
+  return ab && ab.setor !== setor;
+}
+
+function opMap() {
+  const m = {};
+  S.operadores.forEach(o => m[o.id] = o.nome);
+  return m;
+}
+
+function encerrar(aptId) {
+  const a = S.apontamentos.find(x => x.id === aptId);
+  if(a) { a.emAberto = false; a.fimTs = new Date().toISOString(); saveS(); renderPage(currentPage); toast('✓ Atividade encerrada!'); }
+}
+
+let currentPage = 'dashboard';
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function switchTab(tabEl) {
+  const modal = tabEl.closest('.modal');
+  modal.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  modal.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  tabEl.classList.add('active');
+  const target = tabEl.getAttribute('data-tab');
+  document.getElementById(target).classList.add('active');
+  if(target === 'tab-cal') renderCal();
+}
+
+// ═══════════════════════════════════════════════════════
+// FILE UPLOAD
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('click', () => document.getElementById('file-inp').click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.style.borderColor = '';
+    if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+  });
+  updateTopbar();
+  if(S.os) renderDash();
+});
+
+function handleFile(inp) { if(inp.files[0]) processFile(inp.files[0]); }
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const sheet = wb.Sheets['Barras'];
+      if(!sheet) { toast('Aba "Barras" não encontrada.', 'err'); return; }
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      const mats = {}, des = {};
+      for(let i = 6; i < rows.length; i++) {
+        const r = rows[i];
+        const desc = String(r[0]||'').trim();
+        const mat  = String(r[3]||'').trim();
+        const comp = parseFloat(r[1]) || 0;
+        const qtd  = parseFloat(r[2]) || 0;
+        const pesN = parseFloat(r[5]) || 0;
+        const pesT = parseFloat(r[6]) || 0;
+        if(!desc || !mat || pesT === 0) continue;
+        if(!mats[mat]) mats[mat] = { itens:[], pesoTotal:0, qtdTotal:0 };
+        mats[mat].itens.push({desc, comp, qtd, pesT});
+        mats[mat].pesoTotal += pesT; mats[mat].qtdTotal += qtd;
+        if(!des[desc]) des[desc] = { itens:[], pesoTotal:0 };
+        des[desc].itens.push({mat, comp, qtd, pesN, pesT});
+        des[desc].pesoTotal += pesT;
+      }
+      // Build lotes: group by material + comprimento
+      const lotesMap = {};
+      for(let i = 6; i < rows.length; i++) {
+        const r = rows[i];
+        const desc = String(r[0]||'').trim();
+        const mat  = String(r[3]||'').trim();
+        const comp = parseFloat(r[1]) || 0;
+        const qtd  = parseFloat(r[2]) || 0;
+        const pesN = parseFloat(r[5]) || 0;
+        const pesT = parseFloat(r[6]) || 0;
+        if(!desc || !mat || pesT === 0 || comp === 0) continue;
+        const key = mat + '||' + comp;
+        if(!lotesMap[key]) {
+          const pesUnit = pesN > 0 ? Math.round(pesN * comp / 1000 * 10000)/10000 : 0;
+          // Tarefas por tipo de material
+          const mU = mat.toUpperCase();
+          let ops = [];
+          let isChapasCNC = false;
+          if(/^(CT |CA )/.test(mU))            ops = ['Cortar comprimento','Traçagem','Corte furo'];
+          else if(/^(TD |TB )/.test(mU))       ops = ['Corte','Dobra'];
+          else if(/^BC /.test(mU))             ops = ['Traçagem','Corte'];
+          else if(/^(CH |PL |CHAPA|PLACA)/.test(mU)) {
+            ops = ['Corte CNC','Dobra/Conformação'];
+            isChapasCNC = true;
+          }
+          else                                 ops = ['Corte']; // BR, outros
+          lotesMap[key] = { material:mat, comprimento:comp, qtdTotal:0, pesoTotal:0,
+                            pesoUnit:pesUnit, pesoNomKgm:pesN,
+                            ops, isChapasCNC, desenhos:new Set() };
+        }
+        lotesMap[key].qtdTotal += qtd;
+        lotesMap[key].pesoTotal += pesT;
+        lotesMap[key].desenhos.add(desc);
+      }
+      // Convert to array, calc pesoUnit from actual data if pesN=0
+      const lotes = Object.values(lotesMap).map(l => ({
+        ...l,
+        desenhos: [...l.desenhos].sort(),
+        pesoUnit: l.pesoUnit > 0 ? l.pesoUnit :
+                  (l.qtdTotal > 0 ? Math.round(l.pesoTotal/l.qtdTotal*10000)/10000 : 0)
+      })).sort((a,b)=> a.material.localeCompare(b.material) || a.comprimento - b.comprimento);
+
+      parsedXLSX = { mats, des, lotes };
+      const totalKg = Object.values(des).reduce((s,d)=>s+d.pesoTotal,0);
+      const dz = document.getElementById('drop-zone');
+      dz.innerHTML = `<div style="color:var(--green);font-size:36px">✓</div><div class="upload-title" style="color:var(--green)">${file.name}</div><div class="upload-sub">${Object.keys(des).length} desenhos · ${lotes.length} lotes · ${totalKg.toFixed(1)} kg</div>`;
+      toast('✓ Plano lido! Agora processe as tarefas.');
+    } catch(err) { toast('Erro ao ler arquivo: ' + err.message, 'err'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ═══════════════════════════════════════════════════════
+// OPERAÇÕES EXTRAS
+// ═══════════════════════════════════════════════════════
+function addOpExtra() {
+  const v = document.getElementById('op-extra-inp').value.trim();
+  if(!v) return;
+  const cont = document.getElementById('ops-base');
+  const lbl = document.createElement('label');
+  lbl.className = 'op-check-lbl on';
+  lbl.innerHTML = `<input type="checkbox" class="op-chk" value="${v}" checked> ${v}`;
+  lbl.querySelector('input').addEventListener('change', e => lbl.classList.toggle('on', e.target.checked));
+  cont.insertBefore(lbl, cont.lastElementChild);
+  document.getElementById('op-extra-inp').value = '';
+}
+
+// Sync op-check-lbl style on change
+document.addEventListener('change', e => {
+  if(e.target.classList.contains('op-chk')) {
+    e.target.closest('.op-check-lbl').classList.toggle('on', e.target.checked);
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// MATRIX DE TAREFAS
+// ═══════════════════════════════════════════════════════
+function renderLotePreview() {
+  if(!parsedXLSX?.lotes) return;
+  const lotes = parsedXLSX.lotes;
+  const totalKg = lotes.reduce((s,l)=>s+l.pesoTotal,0);
+  const comDobra = lotes.filter(l=>l.temDobra).length;
+  let html = `<div style="display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 16px;border-left:3px solid var(--blue)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Lotes</div>
+      <div style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',sans-serif">${lotes.length}</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 16px;border-left:3px solid var(--green)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Peso Total</div>
+      <div style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',sans-serif">${totalKg.toFixed(0)} kg</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 16px;border-left:3px solid var(--accent)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Com Dobra</div>
+      <div style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',sans-serif">${comDobra}</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px 16px;border-left:3px solid var(--purple)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Materiais</div>
+      <div style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',sans-serif">${new Set(lotes.map(l=>l.material)).size}</div>
+    </div>
+  </div>
+  <div style="max-height:46vh;overflow-y:auto">
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);border-bottom:1px solid var(--border);text-align:left">Material</th>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Comp (mm)</th>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Qtd</th>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Peso/peça (kg)</th>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Peso Total</th>
+      <th style="background:var(--bg3);padding:8px 10px;font-size:10px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)">Tarefas</th>
+    </tr></thead><tbody>`;
+  // Store ops state - use material-specific ops
+  lotes.forEach(l => {
+    if(!l.tarefasSel) {
+      l.tarefasSel = {};
+      (l.ops||['Corte']).forEach(op => l.tarefasSel[op] = true);
+    }
+  });
+
+  lotes.forEach((l,i)=>{
+    const bg = i%2===0?'background:transparent':'background:rgba(255,255,255,.03)';
+    const loteOps = l.ops || ['Corte'];
+    const checksHtml = loteOps.map(op => {
+      const checked = l.tarefasSel[op] !== false ? 'checked' : '';
+      return `<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;margin-right:8px;user-select:none;font-size:11px;font-weight:600;color:var(--text2)">
+        <input type="checkbox" ${checked}
+          onchange="toggleLoteTarefa(${i},'${op}',this.checked)"
+          style="accent-color:var(--green);width:14px;height:14px;cursor:pointer">
+        ${op}
+      </label>`;
+    }).join('');
+    html += `<tr style="${bg};border-bottom:1px solid var(--border)">
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue)">${l.material}</td>
+      <td style="padding:7px 10px;text-align:center;font-size:12px">${l.comprimento}</td>
+      <td style="padding:7px 10px;text-align:center;font-size:12px">${l.qtdTotal}</td>
+      <td style="padding:7px 10px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--yellow)">${l.pesoUnit.toFixed(4)}</td>
+      <td style="padding:7px 10px;text-align:center;font-weight:700;color:var(--green)">${l.pesoTotal.toFixed(2)}</td>
+      <td style="padding:7px 10px">${checksHtml}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('matrix-content').innerHTML = html;
+  updateLoteCount();
+}
+
+function toggleLoteTarefa(loteIdx, op, val) {
+  if(parsedXLSX?.lotes?.[loteIdx]) {
+    parsedXLSX.lotes[loteIdx].tarefasSel[op] = val;
+    updateLoteCount();
+  }
+}
+
+function updateLoteCount() {
+  const lotes = parsedXLSX?.lotes || [];
+  let total = 0;
+  lotes.forEach(l => Object.values(l.tarefasSel||{}).forEach(v => { if(v) total++; }));
+  const comDobra2 = lotes.filter(l=>l.tarefasSel?.Dobrar).length;
+  document.getElementById('matrix-count').textContent = lotes.length + ' lotes · ' + comDobra2 + ' com dobra · ' + total + ' tarefas total';
+}
+
+function iniciarProcessamento() {
+  if(!parsedXLSX) { toast('Carregue o arquivo do plano de corte primeiro.', 'err'); return; }
+  if(!parsedXLSX.lotes?.length) { toast('Nenhum lote encontrado no plano.', 'err'); return; }
+  // Show lote preview in modal-matrix
+  renderLotePreview();
+  openModal('modal-matrix');
+}
+
+function confirmarTarefas() {
+  if(!parsedXLSX?.lotes?.length) { toast('Nenhum lote disponível.', 'err'); return; }
+  // Ensure tarefasSel is initialized on all lotes
+  const lotes = parsedXLSX.lotes.map(l => ({
+    ...l,
+    tarefasSel: l.tarefasSel || Object.fromEntries((l.ops||['Corte']).map(op=>[op,true]))
+  }));
+  const pesoTotal = Object.values(parsedXLSX.des).reduce((s,d)=>s+d.pesoTotal,0);
+  S.os = {
+    numero:    document.getElementById('os-num').value  || 'OS-001',
+    cliente:   document.getElementById('os-cli').value  || '—',
+    produto:   document.getElementById('os-prod').value || '—',
+    prazo:     document.getElementById('os-prazo').value || '',
+    pesoTotal, lotes,
+    materiais: parsedXLSX.mats,
+    desenhos:  parsedXLSX.des,
+    cncChapa:  getCNCData(),
+    criadoEm:  new Date().toISOString()
+  };
+  saveS(); closeModal('modal-matrix');
+  toast(`✓ OS criada com ${lotes.length} lotes!`);
+  renderOS(); updateTopbar();
+  // Auto-sync to server if online
+  if(sbConfigured() && SB_TOKEN) {
+    setTimeout(() => pushToServer().then(()=>renderMinhasOS()).catch(()=>{}), 500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER PAGES
+// ═══════════════════════════════════════════════════════
+function updateTopbar() {
+  const el = document.getElementById('topbar-os');
+  if(el) el.textContent = S.os ? S.os.numero + ' · ' + (S.os.cliente||'') : '← Selecione uma OS';
+}
+
+
+// ═══════════════════════════════════════════════════════
+// BLOQUEIO SEQUENCIAL: PREP → MONT → SOLDA
+// ═══════════════════════════════════════════════════════
+
+// Retorna qtd produzida para um lote+operação específicos
+function qtdProdLoteOp(loteKey, operacao) {
+  // CRITICAL: filter by current OS number to avoid cross-OS contamination
+  const osNum = S.os?.numero;
+  return S.apontamentos
+    .filter(a => a.setor==='Preparativo'
+              && a.loteKey===loteKey
+              && a.operacao===operacao
+              && (!osNum || !a.osNumero || a.osNumero===osNum))
+    .reduce((s,a) => s+(a.qtd||0), 0);
+}
+
+// Verifica se uma operação de um lote está 100% concluída
+function loteOpConcluida(lote, operacao) {
+  const key = lote.material+'||'+lote.comprimento;
+  return qtdProdLoteOp(key, operacao) >= lote.qtdTotal;
+}
+
+// Verifica se um lote está 100% pronto (todas as ops selecionadas concluídas)
+function lotePronto(lote) {
+  const ops = Object.entries(lote.tarefasSel||{}).filter(([,v])=>v).map(([k])=>k);
+  return ops.every(op => loteOpConcluida(lote, op));
+}
+
+// Verifica se um desenho está liberado para montagem
+// (todos os lotes que fazem parte deste desenho estão prontos)
+function desenhoLiberadoMontagem(codDesenho) {
+  if(!S.os?.lotes) return false;
+  const lotesDes = S.os.lotes.filter(l => l.desenhos && l.desenhos.includes(codDesenho));
+  if(!lotesDes.length) return true; // se não tem lotes, libera
+  return lotesDes.every(l => lotePronto(l));
+}
+
+// Verifica se um desenho está liberado para solda
+// (já foi apontado na montagem)
+function desenhoLiberadoSolda(codDesenho) {
+  return S.apontamentos.some(a => a.setor==='Montagem' && a.ref===codDesenho);
+}
+
+// Retorna operações disponíveis para apontar num lote
+// (ops selecionadas que ainda não foram 100% concluídas)
+function loteOpsDisponiveis(lote) {
+  const key = lote.material+'||'+lote.comprimento;
+  return Object.entries(lote.tarefasSel||{})
+    .filter(([op, sel]) => sel && !loteOpConcluida(lote, op))
+    .map(([op]) => op);
+}
+
+// Verifica se um lote tem alguma operação disponível
+function loteTemOpDisponivel(lote) {
+  return loteOpsDisponiveis(lote).length > 0;
+}
+
+function renderDash() {
+  currentPage = 'dashboard';
+  if(!S.os) { document.getElementById('dash-empty').style.display=''; document.getElementById('dash-content').style.display='none'; return; }
+  document.getElementById('dash-empty').style.display='none'; document.getElementById('dash-content').style.display='';
+  const total = S.os.pesoTotal;
+  const kgAcab = kgSetor('Acabamento');
+  const hoje = new Date().toDateString();
+  const kgHoje = S.apontamentos.filter(a=>new Date(a.ts).toDateString()===hoje).reduce((s,a)=>s+(a.peso||0),0);
+  const pct = total > 0 ? (kgAcab / total * 100) : 0;
+  const totalDes = S.os ? Object.keys(S.os.desenhos).length : 0;
+  const desLotes = S.os ? Object.keys(S.os.desenhos).filter(cod=>desenhoLiberadoMontagem(cod)).length : 0;
+  const desMont  = concluidos('Montagem').size;
+  const desSolda = concluidos('Solda').size;
+  const kpis = [
+    {l:'KG PREPARATIVO', v:kgSetor('Preparativo').toFixed(1), u:'kg prep', c:'var(--prep)'},
+    {l:'MONTAGEM', v:desLotes+'/'+totalDes, u:'liberados p/ mont', c:'var(--mont)'},
+    {l:'SOLDA', v:desSolda+'/'+totalDes, u:'desenhos soldados', c:'var(--sold)'},
+    {l:'ACABAMENTO', v:kgAcab.toFixed(1), u:'kg acabados', c:'var(--acab)'},
+    {l:'AVANÇO', v:pct.toFixed(1)+'%', u:'concluído', c:'var(--accent)'},
+  ];
+  document.getElementById('dash-kpis').innerHTML = kpis.map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-unit">${k.u}</div></div>`).join('');
+  document.getElementById('dash-setores').innerHTML = SETORES.map(s=>{
+    const kg=kgSetor(s); const p=total>0?(kg/total*100):0;
+    return `<div class="sc" style="--sc:${SC[s]}"><div class="sc-title">${s}</div>
+      <div class="pbar"><div class="pfill" style="width:${p.toFixed(1)}%;background:${SC[s]}"></div></div>
+      <div class="sc-row"><span>KG Produzidos</span><span>${kg.toFixed(1)} kg</span></div>
+      <div class="sc-row"><span>% do total</span><span>${p.toFixed(1)}%</span></div>
+      <div class="sc-row"><span>Apontamentos</span><span>${S.apontamentos.filter(a=>a.setor===s).length}</span></div>
+    </div>`;
+  }).join('');
+  const om = opMap();
+  const recent = [...S.apontamentos].sort((a,b)=>new Date(b.ts)-new Date(a.ts)).slice(0,8);
+  document.getElementById('dash-recent').innerHTML = recent.length ? recent.map(a=>{
+    const badge = a.emAberto ? `<span class="badge-busy" style="cursor:pointer" onclick="encerrar(${a.id})">⚡ Em aberto</span>` : '<span class="badge-free">✓</span>';
+    return `<tr><td class="mono">${fmtTs(a.ts)}</td><td>${om[a.operadorId]||'—'}</td><td><span class="tag ${TC[a.setor]||''}">${a.setor}</span></td><td class="mono">${a.ref||'—'}</td><td>${(a.peso||0).toFixed(1)} kg</td><td>${badge}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">Sem apontamentos</td></tr>';
+}
+
+function renderOS() {
+  currentPage = 'os';
+  if(!S.os) { document.getElementById('os-form-area').style.display=''; document.getElementById('os-loaded').style.display='none'; return; }
+  document.getElementById('os-form-area').style.display='none'; document.getElementById('os-loaded').style.display='';
+  const {numero, cliente, produto, pesoTotal, materiais, desenhos} = S.os;
+  document.getElementById('os-kpis').innerHTML = [
+    {l:'OS', v:numero, u:'', c:'var(--accent)'},
+    {l:'PESO TOTAL', v:pesoTotal.toFixed(1), u:'kg', c:'var(--blue)'},
+    {l:'DESENHOS', v:Object.keys(desenhos).length, u:'posições', c:'var(--green)'},
+    {l:'MATERIAIS', v:Object.keys(materiais).length, u:'tipos', c:'var(--purple)'},
+  ].map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-unit">${k.u}</div></div>`).join('');
+  // Show lotes table instead of raw materials
+  const lotes = S.os.lotes || [];
+  const comDobra = lotes.filter(l=>l.temDobra).length;
+  const lotesSort = [...lotes].sort((a,b)=>b.pesoTotal-a.pesoTotal).slice(0,30);
+  document.getElementById('os-mat-tbody').innerHTML = lotesSort.map(l=>{
+    const p = (l.pesoTotal/pesoTotal*100).toFixed(2);
+    const tags = ['Cortar'];
+    if(l.temDobra) tags.push('Dobrar');
+    if(l.temFuro) tags.push('Furar');
+    return `<tr>
+      <td class="mono" style="color:var(--blue)">${l.material}</td>
+      <td>${l.comprimento}mm</td>
+      <td>${l.qtdTotal}</td>
+      <td style="color:var(--yellow);font-family:'JetBrains Mono',monospace">${l.pesoUnit.toFixed(4)}</td>
+      <td style="font-weight:700">${l.pesoTotal.toFixed(2)}</td>
+      <td>${tags.map(t=>`<span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-right:3px">${t}</span>`).join('')}</td>
+    </tr>`;
+  }).join('') + (lotes.length>30?`<tr><td colspan="6" style="text-align:center;color:var(--text3);font-size:12px;padding:10px">+ ${lotes.length-30} lotes. Total: ${lotes.length} | ${comDobra} com dobra. Veja aba Preparativo para progresso.</td></tr>`:'');
+  const cm = concluidos('Montagem'), cs = concluidos('Solda'), ca = concluidos('Acabamento');
+  document.getElementById('os-des-tbody').innerHTML = Object.entries(desenhos).sort((a,b)=>a[0].localeCompare(b[0])).map(([cod,d])=>`
+    <tr><td class="mono">${cod}</td><td>${d.itens.length}</td><td>${d.pesoTotal.toFixed(2)}</td>
+    <td>${cm.has(cod)?'<span class="badge-free">✓</span>':'—'}</td>
+    <td>${cs.has(cod)?'<span class="badge-free">✓</span>':'—'}</td>
+    <td>${ca.has(cod)?'<span class="badge-free">✓</span>':'—'}</td></tr>`).join('');
+}
+
+function renderPrep() {
+  currentPage = 'preparativo';
+  if(!S.os) { document.getElementById('prep-kpis').innerHTML='<p style="color:var(--text3)">Carregue uma OS primeiro.</p>'; return; }
+  const apts = S.apontamentos.filter(a=>a.setor==='Preparativo');
+  const kg = apts.reduce((s,a)=>s+(a.peso||0),0);
+  const hoje = new Date().toDateString();
+  const kgH = apts.filter(a=>new Date(a.ts).toDateString()===hoje).reduce((s,a)=>s+(a.peso||0),0);
+  const lotes = S.os.lotes || [];
+  // calc lote progress
+  const lotesConc = lotes.filter(l => lotePronto(l)).length;
+
+  // Show CNC chapa summary at top if any CNC lotes exist
+  const cncWrap = document.getElementById('prep-cnc-wrap');
+  if(cncWrap) {
+    const cncLotes = (S.os?.lotes||[]).filter(l => l.isChapasCNC);
+    if(cncLotes.length) {
+      const totalCNC = cncLotes.reduce((s,l)=>s+l.pesoTotal,0);
+      const doneCNC  = cncLotes.filter(l=>lotePronto(l)).length;
+      const pct      = Math.round(doneCNC/cncLotes.length*100);
+      cncWrap.innerHTML = `<div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);
+          border-radius:10px;padding:12px 16px;margin-bottom:14px;border-left:4px solid var(--blue)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-weight:700;color:var(--blue);font-size:13px">🔩 Corte CNC — Chapas</span>
+          <span style="font-size:12px;color:var(--text2)">${cncLotes.length} lotes · ${totalCNC.toFixed(1)} kg</span>
+          <span style="font-size:12px;font-weight:700;color:${pct===100?'var(--green)':'var(--yellow)'}">${doneCNC}/${cncLotes.length} concluídos (${pct}%)</span>
+          <div style="flex:1;min-width:100px;background:var(--bg3);border-radius:99px;height:5px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green)':'var(--blue)'};border-radius:99px"></div>
+          </div>
+        </div>
+        <p style="font-size:10px;color:var(--text3);margin-top:6px">CH/PL detectados automaticamente · Operações: Corte CNC + Dobra/Conformação</p>
+      </div>`;
+    } else {
+      cncWrap.innerHTML = '';
+    }
+  }
+
+  document.getElementById('prep-kpis').innerHTML = [
+    {l:'KG PREPARADOS',v:kg.toFixed(1),u:'kg',c:'var(--prep)'},
+    {l:'HOJE',v:kgH.toFixed(1),u:'kg hoje',c:'var(--yellow)'},
+    {l:'LOTES CONCLUÍDOS',v:lotesConc+'/'+lotes.length,u:'lotes',c:'var(--green)'},
+    {l:'APONTAMENTOS',v:apts.length,u:'registros',c:'var(--blue)'},
+  ].map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-unit">${k.u}</div></div>`).join('');
+
+  // Lote progress section — virtualized for performance
+  window._prepLotes = { lotes, apts };
+  renderPrepLotes('');
+
+  const om = opMap();
+  const hist = [...apts].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  document.getElementById('prep-hist').innerHTML = hist.length ? hist.map(a=>{
+    const badge = a.emAberto ? `<span class="badge-busy" style="cursor:pointer" onclick="encerrar(${a.id})">⚡ Encerrar</span>` : '<span class="badge-free">✓</span>';
+    return `<tr><td class="mono">${fmtTs(a.ts)}</td><td>${om[a.operadorId]||'—'}</td><td>${a.ref||'—'}</td><td>${a.qtd||'—'} pçs</td><td style="color:var(--green);font-weight:700">${(a.peso||0).toFixed(2)} kg</td><td>${a.turno||'—'}</td><td>${badge}</td></tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Sem apontamentos</td></tr>';
+}
+
+
+// ═══════════════════════════════════════════════════════
+// PREP LOTES — virtualized render
+// ═══════════════════════════════════════════════════════
+function renderPrepLotes(filter) {
+  const lotesEl = document.getElementById('prep-lotes-wrap');
+  if(!lotesEl || !window._prepLotes) return;
+  const { lotes, apts } = window._prepLotes;
+
+  const q   = (filter || document.getElementById('prep-lote-search')?.value || '').toLowerCase();
+  const opF = document.getElementById('prep-lote-op-filter')?.value  || '';
+  const stF = document.getElementById('prep-lote-status-filter')?.value || '';
+
+  // Build per-op qtd map
+  const lotesProg = {};
+  apts.forEach(a => {
+    if(a.loteKey && a.operacao) {
+      const k = a.loteKey + '||' + a.operacao;
+      lotesProg[k] = (lotesProg[k]||0) + (a.qtd||0);
+    }
+  });
+
+  const filtered = lotes.filter(l => {
+    if(q   && !l.material.toLowerCase().includes(q) && !String(l.comprimento).includes(q)) return false;
+    if(opF && !(l.tarefasSel && l.tarefasSel[opF])) return false;
+    const done = lotePronto(l);
+    if(stF === 'pendente'  &&  done) return false;
+    if(stF === 'concluido' && !done) return false;
+    return true;
+  });
+
+  window._filteredLotes = filtered;
+  const PAGE = 60;
+  const shown    = filtered.slice(0, (window._prepPage||1) * PAGE);
+  const hasMore  = filtered.length > shown.length;
+  const concl    = filtered.filter(l => lotePronto(l)).length;
+
+  let out = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'
+    + shown.length + '/' + filtered.length + ' lotes · ' + concl + ' concluídos</div>';
+
+  out += shown.map(l => {
+    const key      = l.material + '||' + l.comprimento;
+    const done     = lotePronto(l);
+    const prodKg   = apts.filter(a => a.loteKey === key).reduce((s,a) => s + (a.peso||0), 0);
+    const loteIdx2 = lotes.indexOf(l);
+
+    const firstOp  = Object.entries(l.tarefasSel||{}).find(([,v])=>v)?.[0];
+    const firstQtd = firstOp
+      ? S.apontamentos.filter(a=>a.loteKey===key&&a.operacao===firstOp).reduce((s,a)=>s+(a.qtd||0),0)
+      : 0;
+    const pct      = l.qtdTotal > 0 ? Math.min(firstQtd / l.qtdTotal * 100, 100) : 0;
+
+    const dobTag   = l.temDobra
+      ? '<span style="background:rgba(249,115,22,.15);color:var(--sold);padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-left:5px">DOBRA</span>'
+      : '';
+
+    // Per-op bars
+    const opsAtivas = Object.entries(l.tarefasSel||{}).filter(([,v])=>v).map(([op])=>op);
+    const opsBars = opsAtivas.map(op => {
+      const qProd = S.apontamentos.filter(a=>a.setor==='Preparativo'&&a.loteKey===key&&a.operacao===op)
+                                  .reduce((s,a)=>s+(a.qtd||0),0);
+      const pOp  = l.qtdTotal>0 ? Math.min(qProd/l.qtdTotal*100,100) : 0;
+      const doneOp = qProd >= l.qtdTotal;
+      const col  = doneOp ? 'var(--green)' : 'var(--blue)';
+      return '<div style="margin-bottom:3px">'
+        + '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:1px">'
+        + '<span>' + op + '</span>'
+        + '<span style="color:' + col + ';font-weight:700">' + qProd + '/' + l.qtdTotal + (doneOp?' ✓':'') + '</span>'
+        + '</div>'
+        + '<div style="background:var(--bg3);border-radius:99px;height:4px;overflow:hidden">'
+        + '<div style="width:' + pOp.toFixed(1) + '%;height:100%;border-radius:99px;background:' + col + '"></div>'
+        + '</div></div>';
+    }).join('');
+
+    // Checkbox or done icon
+    const chkOrDone = done
+      ? '<span style="font-size:15px;flex-shrink:0">✅</span>'
+      : '<input type="checkbox" data-lote-idx="' + loteIdx2 + '" class="lote-chk"'
+        + ' onchange="updateSelCount()"'
+        + ' style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0">';
+
+    const borderCol = done ? 'var(--green)' : 'var(--prep)';
+    return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:7px;'
+      + 'padding:9px 12px;margin-bottom:5px;border-left:3px solid ' + borderCol + '" id="lc-' + loteIdx2 + '">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + chkOrDone
+      + '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--blue);font-weight:700">' + l.material + '</span>'
+      + '<span style="font-size:10px;color:var(--text3)"> | ' + l.comprimento + 'mm</span>'
+      + dobTag
+      + '<span style="margin-left:auto;font-size:11px;font-weight:700;color:' + (done?'var(--green)':'var(--text2)') + '">'
+      + prodKg.toFixed(1) + ' kg</span>'
+      + '</div>'
+      + opsBars
+      + '<div style="font-size:9px;color:var(--text3);margin-top:3px">'
+      + l.pesoUnit.toFixed(4) + ' kg/pç · total ' + l.pesoTotal.toFixed(2) + ' kg</div>'
+      + '</div>';
+  }).join('');
+
+  if(hasMore) {
+    out += '<div style="text-align:center;padding:10px">'
+      + '<button class="btn btn-s btn-sm" onclick="window._prepPage=(window._prepPage||1)+1;renderPrepLotes()">'
+      + 'Carregar mais (' + (filtered.length - shown.length) + ' restantes)</button></div>';
+  }
+  lotesEl.innerHTML = out;
+}
+
+function renderSetor(prefix, setor) {
+  currentPage = prefix === 'mont' ? 'montagem' : prefix === 'sold' ? 'solda' : 'acabamento';
+  if(!S.os) return;
+  const apts = S.apontamentos.filter(a=>a.setor===setor);
+  const kg = apts.reduce((s,a)=>s+(a.peso||0),0);
+  const con = concluidos(setor);
+  const totalDes = Object.keys(S.os.desenhos).length;
+  // Count locked/available desenhos
+  let liberados = 0, bloqueados = 0;
+  if(setor==='Montagem') {
+    Object.keys(S.os.desenhos).forEach(cod => {
+      if(desenhoLiberadoMontagem(cod)) liberados++; else bloqueados++;
+    });
+  } else if(setor==='Solda') {
+    Object.keys(S.os.desenhos).forEach(cod => {
+      if(desenhoLiberadoSolda(cod)) liberados++; else bloqueados++;
+    });
+  } else {
+    liberados = totalDes;
+  }
+  document.getElementById(prefix+'-kpis').innerHTML = [
+    {l:'KG PRODUZIDOS',v:kg.toFixed(1),u:'kg',c:SC[setor]},
+    {l:'CONCLUÍDOS',v:con.size+'/'+totalDes,u:'desenhos',c:'var(--green)'},
+    {l:'LIBERADOS',v:liberados,u:'disponíveis',c:'var(--blue)'},
+    {l:'BLOQUEADOS',v:bloqueados,u:'aguardando',c:'var(--red)'},
+  ].map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-unit">${k.u}</div></div>`).join('');
+  const om = opMap();
+  // Virtualized desenho list
+  const allDes = Object.entries(S.os.desenhos).sort((a,b)=>a[0].localeCompare(b[0]));
+  const DPAGE = 80;
+  const shownDes = allDes.slice(0, DPAGE);
+  const desEl = document.getElementById(prefix+'-des-list');
+  desEl.innerHTML = `<div style="margin-bottom:8px;display:flex;gap:8px;align-items:center">
+    <input class="inp" placeholder="Buscar desenho..." oninput="filterDesEl(this,'${prefix}','${setor}')" style="flex:1;padding:6px 10px;font-size:12px">
+    <span style="font-size:11px;color:var(--text3);white-space:nowrap">${con.size}/${allDes.length} concluídos</span>
+  </div>
+  <div id="${prefix}-des-inner">` +
+  shownDes.map(([cod,d])=>{
+    const done = con.has(cod);
+    const quem = apts.filter(a=>a.ref===cod).map(a=>om[a.operadorId]||'?').join(', ');
+    // Check blocking status
+    let lockTag = '';
+    if(!done) {
+      if(setor==='Montagem' && !desenhoLiberadoMontagem(cod)) {
+        const lotesTotal = (S.os.lotes||[]).filter(l=>l.desenhos&&l.desenhos.includes(cod)).length;
+        const lotesDone = (S.os.lotes||[]).filter(l=>l.desenhos&&l.desenhos.includes(cod)&&lotePronto(l)).length;
+        lockTag = `<span style="background:rgba(239,68,68,.15);color:var(--red);padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">🔒 PREP ${lotesDone}/${lotesTotal}</span>`;
+      } else if(setor==='Solda' && !desenhoLiberadoSolda(cod)) {
+        lockTag = `<span style="background:rgba(239,68,68,.15);color:var(--red);padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">🔒 MONT PENDENTE</span>`;
+      }
+    }
+    return `<div class="des-item" style="border-left:3px solid ${done?'var(--green)':lockTag?'var(--red)':SC[setor]};${done?'opacity:.7':''}">
+      ${!done && !lockTag ? `<input type="checkbox" class="des-chk" data-cod="${cod}" data-setor="${setor}" onchange="updDesSelCount('${prefix}')" onclick="event.stopPropagation()" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0;margin-right:4px">` : `<span style="width:22px;flex-shrink:0;text-align:center">${done?'✅':lockTag?'🔒':'⬜'}</span>`}
+      <div class="des-code" style="flex:1">${cod}</div>
+      <div class="des-info">${d.itens.length} itens${quem?' · '+quem:''}${lockTag?' ':''}${lockTag}</div>
+      <div class="des-kg">${d.pesoTotal.toFixed(2)} kg</div>
+      <span style="font-size:13px">${done?'✅':lockTag?'🔒':'⏳'}</span>
+    </div>`;
+  }).join('') +
+  (allDes.length > DPAGE ? `<div style="text-align:center;padding:8px;color:var(--text3);font-size:12px">Use a busca para encontrar desenhos específicos</div>` : '') +
+  '</div>';
+  const hist = [...apts].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  document.getElementById(prefix+'-hist').innerHTML = hist.length ? hist.map(a=>{
+    const badge = a.emAberto ? `<span class="badge-busy" style="cursor:pointer" onclick="encerrar(${a.id})">⚡ Encerrar</span>` : '<span class="badge-free">✓</span>';
+    return `<tr><td class="mono">${fmtTs(a.ts)}</td><td>${om[a.operadorId]||'—'}</td><td class="mono">${a.ref||'—'}</td><td>${(a.peso||0).toFixed(2)}</td><td>${a.turno||'—'}</td><td>${badge}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">Sem apontamentos</td></tr>';
+}
+
+function renderOps() {
+  currentPage = 'operadores';
+  document.getElementById('op-tbody').innerHTML = S.operadores.length ? S.operadores.map((o,i)=>{
+    const ab = atividadeAberta(o.id);
+    const extras = (o.setoresSecundarios||[]).filter(s=>s!==o.setor);
+    const extHtml = extras.length ? extras.map(s=>`<span class="tag ${TC[s]||''}" style="font-size:10px">${s}</span>`).join(' ') : '—';
+    const hh = (parseFloat(o.salario||0)/(o.hdia*22)).toFixed(2);
+    const sit = ab ? `<span class="badge-busy">⚡ ${ab.setor}</span>` : '<span class="badge-free">● Livre</span>';
+    return `<tr>
+      <td class="mono" style="color:var(--text3)">OP-${String(i+1).padStart(3,'0')}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="op-avatar">${o.nome.slice(0,2).toUpperCase()}</div><div><div style="font-weight:600">${o.nome}</div><div style="font-size:11px;color:var(--text3)">${o.turno}</div></div></div></td>
+      <td><span class="tag ${TC[o.setor]||''}">${o.setor}</span></td>
+      <td>${extHtml}</td><td>${o.turno}</td><td>${o.hdia}h</td>
+      <td class="mono">R$ ${hh}</td><td>${sit}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-s btn-sm" onclick="editOp(${i})" title="Editar">✎</button>
+        <button class="btn btn-s btn-sm" onclick="editOpCal(${i})" title="Calendário">📅</button>
+        <button class="btn btn-s btn-sm" onclick="removeOp(${i})" title="Remover">✕</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:32px">Nenhum operador cadastrado</td></tr>';
+}
+
+
+function filterDesEl(inp, prefix, setor) {
+  if(!S.os) return;
+  const q = inp.value.toLowerCase();
+  const om2 = opMap();
+  const con2 = concluidos(setor);
+  const apts2 = S.apontamentos.filter(a=>a.setor===setor);
+  const allDes2 = Object.entries(S.os.desenhos).sort((a,b)=>a[0].localeCompare(b[0]));
+  const filtered2 = q ? allDes2.filter(([cod])=>cod.toLowerCase().includes(q)) : allDes2.slice(0,80);
+  document.getElementById(prefix+'-des-inner').innerHTML = filtered2.map(([cod,d])=>{
+    const done = con2.has(cod);
+    const quem = apts2.filter(a=>a.ref===cod).map(a=>om2[a.operadorId]||'?').join(', ');
+    return `<div class="des-item" style="border-left:3px solid ${done?'var(--green)':SC[setor]};${done?'opacity:.7':''}">
+      ${!done ? `<input type="checkbox" class="des-chk" data-cod="${cod}" data-setor="${setor}" onchange="updDesSelCount('${prefix}')" onclick="event.stopPropagation()" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0;margin-right:4px">` : '<span style="width:22px;flex-shrink:0"></span>'}
+      <div class="des-code" style="flex:1">${cod}</div>
+      <div class="des-info">${d.itens.length} itens${quem?' · '+quem:''}</div>
+      <div class="des-kg">${d.pesoTotal.toFixed(2)} kg</div>
+      <span style="font-size:13px">${done?'✅':'⏳'}</span>
+    </div>`;
+  }).join('') || '<div style="text-align:center;color:var(--text3);padding:20px">Nenhum desenho encontrado</div>';
+}
+
+
+// ═══════════════════════════════════════════════════════
+// CRONOGRAMA GANTT
+// ═══════════════════════════════════════════════════════
+
+function calcDesenhoStatus(cod) {
+  // Returns { prep, mont, sold, acab } each 0-100
+  if(!S.os) return null;
+
+  // PREP: avg % across all lotes of this desenho
+  const lotesDes = (S.os.lotes||[]).filter(l => l.desenhos && l.desenhos.includes(cod));
+  let prepPct = 0;
+  if(lotesDes.length > 0) {
+    let totalOps = 0, doneOps = 0;
+    lotesDes.forEach(l => {
+      const ops = Object.entries(l.tarefasSel||{}).filter(([,v])=>v).map(([k])=>k);
+      ops.forEach(op => {
+        totalOps++;
+        const key = l.material+'||'+l.comprimento;
+        const prod = qtdProdLoteOp(key, op);
+        doneOps += Math.min(prod / l.qtdTotal, 1);
+      });
+    });
+    prepPct = totalOps > 0 ? Math.round(doneOps / totalOps * 100) : 0;
+  } else {
+    prepPct = 0;
+  }
+
+  // MONT: 100 if concluido, else 0
+  const montDone = concluidos('Montagem').has(cod);
+  const montPct  = montDone ? 100 : 0;
+
+  // SOLDA: 100 if concluido
+  const soldDone = concluidos('Solda').has(cod);
+  const soldPct  = soldDone ? 100 : 0;
+
+  // ACAB: 100 if concluido
+  const acabDone = concluidos('Acabamento').has(cod);
+  const acabPct  = acabDone ? 100 : 0;
+
+  // Overall status
+  let status = 'pendente';
+  if(acabDone) status = 'concluido';
+  else if(montPct > 0 || soldPct > 0 || prepPct > 0) status = 'em_andamento';
+
+  return { prepPct, montPct, soldPct, acabPct, status };
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+// EQUIPE DE TRABALHO
+// ═══════════════════════════════════════════════════════
+
+function openModal(id) {
+  if(id==='modal-prep') { openPrepModal(); return; }
+  if(id==='modal-login') {
+    const urlEl = document.getElementById('login-apiurl');
+    const keyEl = document.getElementById('login-anonkey');
+    if(urlEl && SB_URL) urlEl.value = SB_URL;
+    if(keyEl && SB_KEY) keyEl.value = SB_KEY;
+  }
+  if(id==='modal-equipe') {
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('eq-data').value = today;
+    document.getElementById('eq-qt-prep').value = '0';
+    document.getElementById('eq-qt-mont').value = '0';
+    document.getElementById('eq-qt-sold').value = '0';
+    document.getElementById('eq-qt-acab').value = '0';
+    ['eq-nm-prep','eq-nm-mont','eq-nm-sold','eq-nm-acab','eq-obs'].forEach(id2=>{
+      const el = document.getElementById(id2); if(el) el.value='';
+    });
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function saveEquipe() {
+  const data  = document.getElementById('eq-data').value;
+  const turno = document.getElementById('eq-turno').value;
+  const horario = turno==='Diurno' ? '07h–12h / 13h–17h' : '19h–22h / 23h–05h';
+  const obs   = document.getElementById('eq-obs').value;
+  if(!data) { toast('Informe a data.','err'); return; }
+
+  const setores2 = [
+    {key:'Preparativo', qtEl:'eq-qt-prep', nmEl:'eq-nm-prep', color:'var(--prep)'},
+    {key:'Montagem',    qtEl:'eq-qt-mont', nmEl:'eq-nm-mont', color:'var(--mont)'},
+    {key:'Solda',       qtEl:'eq-qt-sold', nmEl:'eq-nm-sold', color:'var(--sold)'},
+    {key:'Acabamento',  qtEl:'eq-qt-acab', nmEl:'eq-nm-acab', color:'var(--acab)'},
+  ];
+
+  let saved = 0;
+  setores2.forEach(s => {
+    const qt = parseInt(document.getElementById(s.qtEl).value)||0;
+    const nm = document.getElementById(s.nmEl).value.trim();
+    if(qt > 0 || nm) {
+      if(!S.escalas) S.escalas = [];
+      S.escalas.push({
+        id: Date.now()+'_'+s.key,
+        data, turno, horario,
+        setor: s.key, qt, nomes: nm, obs,
+        ts: new Date().toISOString()
+      });
+      saved++;
+    }
+  });
+
+  if(!saved) { toast('Informe ao menos um setor.','err'); return; }
+  saveS(); closeModal('modal-equipe'); toast('✓ Escala salva!');
+  renderEquipe();
+}
+
+function renderEquipe() {
+  currentPage = 'equipe';
+  const escalas = S.escalas || [];
+
+  // KPIs — hoje
+  const hoje = new Date().toISOString().split('T')[0];
+  const escalasHoje = escalas.filter(e => e.data === hoje);
+  const totalHoje = escalasHoje.reduce((s,e)=>s+(e.qt||0),0);
+
+  document.getElementById('equipe-kpis').innerHTML = [
+    {l:'OPERADORES HOJE',  v:totalHoje,         u:'escalados',  c:'var(--accent)'},
+    {l:'ESCALAS REGISTRADAS', v:escalas.length,  u:'registros',  c:'var(--blue)'},
+    {l:'TURNO HOJE',
+     v: escalasHoje.length ? escalasHoje[0].turno : '—',
+     u: escalasHoje.length ? escalasHoje[0].horario : 'sem escala hoje',
+     c:'var(--yellow)'},
+  ].map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="kpi-label">${k.l}</div><div class="kpi-value">${k.v}</div><div class="kpi-unit">${k.u}</div></div>`).join('');
+
+  // Cards por setor com escala de hoje
+  const SETOR_CFG = [
+    {s:'Preparativo',color:'var(--prep)',icon:'⚙'},
+    {s:'Montagem',   color:'var(--mont)',icon:'🔧'},
+    {s:'Solda',      color:'var(--sold)',icon:'🔥'},
+    {s:'Acabamento', color:'var(--acab)',icon:'✨'},
+  ];
+
+  document.getElementById('equipe-setores').innerHTML = SETOR_CFG.map(cfg => {
+    const e = escalasHoje.find(x=>x.setor===cfg.s);
+    const qt = e?.qt || 0;
+    const nm = e?.nomes || '';
+    const turno = e?.turno || '—';
+    const hor = e?.horario || '';
+    return `<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;
+                        padding:18px;border-left:4px solid ${cfg.color}">
+      <div style="font-size:13px;font-weight:700;color:${cfg.color};margin-bottom:12px">${cfg.icon} ${cfg.s}</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--text)">${qt}</span>
+        <span style="font-size:12px;color:var(--text3)">operadores</span>
+      </div>
+      ${nm ? `<div style="font-size:11px;color:var(--text2);margin-bottom:6px">👤 ${nm}</div>` : ''}
+      <div style="font-size:10px;color:var(--text3)">${turno ? turno+' · '+hor : 'Sem escala hoje'}</div>
+    </div>`;
+  }).join('');
+
+  // Histórico
+  const hist = [...escalas].sort((a,b)=>b.data.localeCompare(a.data));
+  const TC2 = {Preparativo:'tp',Montagem:'tm',Solda:'ts',Acabamento:'ta'};
+  document.getElementById('equipe-hist-tbody').innerHTML = hist.length ?
+    hist.map(e=>`<tr>
+      <td class="mono">${e.data}</td>
+      <td><span class="tag ${TC2[e.setor]||''}">${e.setor}</span></td>
+      <td>${e.turno}</td>
+      <td style="font-weight:700;font-size:16px">${e.qt}</td>
+      <td class="mono" style="font-size:11px">${e.horario}</td>
+      <td style="color:var(--text3);font-size:12px">${e.nomes||'—'}</td>
+      <td><button class="btn btn-s btn-sm" onclick="removeEscala('${e.id}')" style="color:var(--red)">✕</button></td>
+    </tr>`).join('') :
+    '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Nenhuma escala registrada</td></tr>';
+}
+
+function removeEscala(id) {
+  if(!confirm('Remover esta escala?')) return;
+  S.escalas = (S.escalas||[]).filter(e=>e.id!==id);
+  saveS(); renderEquipe();
+}
+
+
+function updateSelCount() {
+  const chks = document.querySelectorAll('.lote-chk:checked');
+  const cnt = chks.length;
+  const el = document.getElementById('prep-sel-count');
+  const btn = document.getElementById('prep-bulk-btn');
+  if(el) el.textContent = cnt + ' selecionados';
+  if(btn) btn.style.display = cnt > 0 ? '' : 'none';
+}
+
+function toggleSelectAll() {
+  const chks = document.querySelectorAll('.lote-chk');
+  const allChecked = Array.from(chks).every(c=>c.checked);
+  chks.forEach(c => c.checked = !allChecked);
+  updateSelCount();
+}
+
+function bulkConcluir() {
+  const lotes = S.os?.lotes || [];
+  const chks  = document.querySelectorAll('.lote-chk:checked');
+  if(!chks.length) { toast('Nenhum lote selecionado.','err'); return; }
+
+  // Need operator and turno — use last used or first available
+  const ops = S.operadores?.filter(o=>opSetores(o).includes('Preparativo')) || [];
+  const opId = ops[0]?.id || '';
+
+  let count = 0;
+  chks.forEach(chk => {
+    const loteIdx = parseInt(chk.dataset.loteIdx);
+    const lote = lotes[loteIdx];
+    if(!lote) return;
+
+    const opsDoLote = Object.entries(lote.tarefasSel||{}).filter(([,v])=>v).map(([k])=>k);
+    opsDoLote.forEach((operacao, opI) => {
+      const loteKey = lote.material+'||'+lote.comprimento;
+      const jaProd = qtdProdLoteOp(loteKey, operacao);
+      const qtd = Math.max(0, lote.qtdTotal - jaProd);
+      if(qtd <= 0) return;
+      const isLastOp = opI === opsDoLote.length - 1;
+      const peso = isLastOp ? Math.round(lote.pesoTotal * 10000)/10000 : 0;
+      const ref = `${operacao}: ${lote.material} | ${lote.comprimento}mm`;
+      S.apontamentos.push({
+        id: Date.now()+opI, ts: new Date().toISOString(),
+        setor:'Preparativo', operadorId: opId, tipo:'lote',
+        ref, operacao, material:lote.material,
+        comprimento:lote.comprimento, loteKey,
+        qtd, pesoUnit:lote.pesoUnit, peso,
+        turno:'Diurno', obs:'Lançamento em lote', emAberto:false, modo:'concluido',
+        osNumero:S.os?.numero
+      });
+      count++;
+    });
+  });
+
+  saveS();
+  toast(`✅ ${count} operações concluídas em ${chks.length} lotes!`);
+  renderPrep(); renderDash();
+}
+
+
+// ═══════════════════════════════════════════════════════
+// MINHAS OS — múltiplas ordens de serviço
+// ═══════════════════════════════════════════════════════
+
+// Cache de todas OS do servidor
+let ALL_OS = [];
+
+async function renderMinhasOS() {
+  currentPage = 'minhasOS';
+  const grid  = document.getElementById('minhasOS-grid');
+  const empty = document.getElementById('minhasOS-empty');
+  if(!grid) return;
+
+  grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px">Carregando OS do servidor...</div>';
+
+  try {
+    if(sbConfigured() && SB_TOKEN) {
+      const ordens = await sbReq('GET',
+        '/rest/v1/ordens?order=criado.desc&select=id,numero,cliente,produto,prazo,peso_total,status,criado',
+        null, true);
+      ALL_OS = ordens || [];
+    }
+  } catch(e) {
+    ALL_OS = [];
+  }
+
+  // Always show local OS if exists and not in server list
+  if(S.os) {
+    const exists = ALL_OS.find(o => o.numero === S.os.numero);
+    if(!exists) ALL_OS.unshift({ numero: S.os.numero, cliente: S.os.cliente,
+      produto: S.os.produto, prazo: S.os.prazo,
+      peso_total: S.os.pesoTotal, status: 'ativa', local: true });
+  }
+
+  if(!ALL_OS.length) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = ALL_OS.map((os, i) => {
+    const isActive = S.os?.numero === os.numero;
+    const isLocal  = os.local;
+    const pct = os.peso_total > 0 ? 0 : 0; // calc from apts if available
+    const statusColor = os.status === 'ativa' ? 'var(--green)' : 'var(--text3)';
+    const prazoFmt = os.prazo ? new Date(os.prazo).toLocaleDateString('pt-BR') : '—';
+
+    return `<div style="background:var(--panel);border:1px solid ${isActive?'var(--accent)':'var(--border)'};
+              border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;
+              ${isActive?'box-shadow:0 0 0 2px var(--accent)':''}"
+              onclick="switchOS('${os.numero}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;
+                      color:${isActive?'var(--accent)':'var(--text)'};letter-spacing:1px">${os.numero}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${os.cliente||'—'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          ${isActive ? '<span style="background:rgba(249,115,22,.15);color:var(--accent);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700">● ATIVA</span>' : ''}
+          ${isLocal  ? '<span style="background:rgba(100,116,139,.15);color:var(--text3);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700">LOCAL</span>' : ''}
+          <span style="font-size:10px;color:${statusColor};font-weight:700;text-transform:uppercase">${os.status||'ativa'}</span>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">${os.produto||'—'}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);
+                  padding-top:10px;border-top:1px solid var(--border);align-items:center;">
+        <span>⚖ ${os.peso_total?.toFixed(0)||0} kg</span>
+        <span>📅 ${prazoFmt}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-p btn-sm" onclick="event.stopPropagation();switchOS('${os.numero}')"
+            style="padding:4px 10px;font-size:11px;">→ Abrir</button>
+          <button class="btn btn-s btn-sm" onclick="event.stopPropagation();editarOSById(${os.id},'${os.numero}','${os.cliente||''}','${os.produto||''}','${os.prazo||''}')"
+            style="padding:4px 8px;font-size:11px;">✏️</button>
+          <button class="btn btn-s btn-sm" onclick="event.stopPropagation();deleteOSById(${os.id},'${os.numero}')"
+            style="padding:4px 8px;font-size:11px;color:var(--red);">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function switchOS(numero) {
+  if(S.os?.numero === numero) {
+    // Já está ativa — vai para dashboard
+    goPage('dashboard');
+    return;
+  }
+
+  // Save current OS first
+  if(S.os && sbConfigured() && SB_TOKEN) {
+    await pushToServer().catch(()=>{});
+  }
+
+  // Load selected OS from server
+  if(sbConfigured() && SB_TOKEN) {
+    try {
+      toast('Carregando OS ' + numero + '...');
+      // Get OS data
+      const ordens = await sbReq('GET',
+        '/rest/v1/ordens?numero=eq.' + encodeURIComponent(numero) + '&select=*',
+        null, true);
+      if(!ordens?.length) { toast('OS não encontrada no servidor.','err'); return; }
+
+      const os = ordens[0];
+      const dados = os.dados_json ? (typeof os.dados_json === 'string' ? JSON.parse(os.dados_json) : os.dados_json) : {};
+
+      // Get apontamentos
+      const apts = await sbReq('GET',
+        '/rest/v1/apontamentos?os_id=eq.' + os.id + '&order=ts.asc',
+        null, true) || [];
+
+      // Get escalas
+      const escs = await sbReq('GET',
+        '/rest/v1/escalas?os_id=eq.' + os.id + '&order=data.desc',
+        null, true) || [];
+
+      // Build state
+      S.os = { numero: os.numero, cliente: os.cliente, produto: os.produto,
+               prazo: os.prazo, pesoTotal: os.peso_total, ...dados };
+      S.apontamentos = apts.map(a => ({
+        id: a.id, ts: a.ts, setor: a.setor, operadorId: a.user_email,
+        tipo: a.lote_key ? 'lote' : 'desenho',
+        ref: a.ref, operacao: a.operacao, material: a.material,
+        comprimento: a.comprimento, loteKey: a.lote_key,
+        qtd: a.qtd, pesoUnit: a.peso_unit, peso: a.peso,
+        turno: a.turno, obs: a.obs, emAberto: a.em_aberto, modo: a.modo
+      }));
+      S.escalas = escs.map(e => ({
+        id: String(e.id), data: e.data, turno: e.turno,
+        horario: e.horario, setor: e.setor, qt: e.qt, nomes: e.nomes, obs: e.obs
+      }));
+
+      saveS(true);
+      updateTopbar();
+      toast('✓ OS ' + numero + ' carregada!');
+      goPage('dashboard');
+    } catch(e) {
+      toast('Erro ao carregar OS: ' + e.message, 'err');
+    }
+  } else {
+    toast('Faça login para trocar de OS.', 'err');
+    openModal('modal-login');
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// PLANEJAMENTO & CAPACIDADE
+// ═══════════════════════════════════════════════════════════════════
+
+// Adiciona N dias úteis a uma data (pula finais de semana)
+function addDiasUteis(dataInicio, dias, diasSemana) {
+  const d = new Date(dataInicio);
+  let added = 0;
+  while(added < dias) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if(dow === 0) continue; // domingo sempre pula
+    if(dow === 6 && diasSemana < 6) continue; // sábado pula se 5 dias/sem
+    added++;
+  }
+  return d;
+}
+
+function countDiasUteis(inicio, fim, diasSemana) {
+  let d = new Date(inicio);
+  const end = new Date(fim);
+  let count = 0;
+  while(d <= end) {
+    const dow = d.getDay();
+    const util = dow !== 0 && (dow !== 6 || diasSemana >= 6);
+    if(util) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'2-digit'});
+}
+
+function getCap(setor) {
+  const s = setor.toLowerCase().replace('ç','c').replace('ã','a').substring(0,4);
+  const map = {prep:'prep', mont:'mont', sold:'sold', acab:'acab',
+               prepa:'prep', monta:'mont', solda:'sold', acaba:'acab'};
+  const k = map[s] || s;
+  const op = parseFloat(document.getElementById('cap-'+k+'-op')?.value)||1;
+  const h  = parseFloat(document.getElementById('cap-'+k+'-h')?.value)||9;
+  const kg = parseFloat(document.getElementById('cap-'+k+'-kg')?.value)||10;
+  return { op, h, kg, kgDia: op * h * kg };
+}
+
+function calcPrevDias() {
+  if(!S.os) return;
+  const peso = S.os.pesoTotal || 0;
+  const setores = ['Preparativo','Montagem','Solda','Acabamento'];
+  const prev = document.getElementById('plan-preview');
+  if(!prev) return;
+
+  const colors = {Preparativo:'var(--prep)',Montagem:'var(--mont)',Solda:'var(--sold)',Acabamento:'var(--acab)'};
+  const icons  = {Preparativo:'⚙',Montagem:'🔧',Solda:'🔥',Acabamento:'✨'};
+
+  prev.innerHTML = setores.map(s => {
+    const cap = getCap(s);
+    const dias = cap.kgDia > 0 ? Math.ceil(peso / cap.kgDia) : '?';
+    return `<div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;
+                        padding:14px;border-left:3px solid ${colors[s]}">
+      <div style="font-size:10px;font-weight:700;color:${colors[s]};text-transform:uppercase;margin-bottom:6px">${icons[s]} ${s}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900">${dias}</div>
+      <div style="font-size:10px;color:var(--text3)">dias úteis</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">${cap.kgDia.toFixed(0)} kg/dia · ${cap.op} op × ${cap.h}h × ${cap.kg} kg/h</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPlanejamento() {
+  currentPage = 'planejamento';
+  if(!S.os) {
+    document.getElementById('plan-preview').innerHTML =
+      '<p style="color:var(--text3);font-size:13px">Carregue uma OS primeiro.</p>';
+    return;
+  }
+  // Set default dates from OS
+  const hoje = new Date().toISOString().split('T')[0];
+  const prazoEl = document.getElementById('plan-prazo');
+  const inicioEl = document.getElementById('plan-inicio');
+  if(inicioEl && !inicioEl.value) inicioEl.value = hoje;
+  if(prazoEl && S.os.prazo && !prazoEl.value) prazoEl.value = S.os.prazo.split('T')[0];
+  calcPrevDias();
+}
+
+function calcularCronograma() {
+  if(!S.os) { toast('Carregue uma OS primeiro.','err'); return; }
+
+  const inicio    = document.getElementById('plan-inicio').value;
+  const prazo     = document.getElementById('plan-prazo').value;
+  const diasSem   = parseInt(document.getElementById('plan-dias-semana').value)||5;
+
+  if(!inicio || !prazo) { toast('Informe data de início e prazo.','err'); return; }
+  if(new Date(prazo) <= new Date(inicio)) { toast('Prazo deve ser após a data de início.','err'); return; }
+
+  const peso  = S.os.pesoTotal || 0;
+  const desenhos = Object.entries(S.os.desenhos||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+  const totalDes  = desenhos.length;
+
+  const SETORES_SEQ = ['Preparativo','Montagem','Solda','Acabamento'];
+  const COLORS = {Preparativo:'var(--prep)',Montagem:'var(--mont)',Solda:'var(--sold)',Acabamento:'var(--acab)'};
+  const ICONS  = {Preparativo:'⚙',Montagem:'🔧',Solda:'🔥',Acabamento:'✨'};
+
+  // ── Calcular datas por setor (sequencial) ─────────────────────
+  let dataAtual = new Date(inicio);
+  const faseSetor = {};
+  let totalDiasNecessarios = 0;
+
+  SETORES_SEQ.forEach(s => {
+    const cap = getCap(s);
+    const dias = cap.kgDia > 0 ? Math.ceil(peso / cap.kgDia) : 1;
+    totalDiasNecessarios += dias;
+    const dataFim = addDiasUteis(new Date(dataAtual), dias, diasSem);
+    faseSetor[s] = { inicio: new Date(dataAtual), fim: dataFim, dias, cap };
+    dataAtual = new Date(dataFim);
+  });
+
+  const dataFimTotal = dataAtual;
+  const diasDisponiveis = countDiasUteis(inicio, prazo, diasSem);
+  const ok = dataFimTotal <= new Date(prazo);
+
+  // ── Salvar no estado da OS ─────────────────────────────────────
+  S.os.cronograma = { inicio, prazo, diasSem, faseSetor: JSON.parse(JSON.stringify(
+    Object.fromEntries(Object.entries(faseSetor).map(([k,v])=>[k,{
+      inicio: v.inicio.toISOString(), fim: v.fim.toISOString(), dias: v.dias
+    }]))
+  )) };
+  saveS();
+
+  // ── Alerta de prazo ───────────────────────────────────────────
+  const alertEl = document.getElementById('plan-alerta');
+  if(!ok) {
+    const diasAtraso = countDiasUteis(prazo, dataFimTotal.toISOString().split('T')[0], diasSem);
+    alertEl.style.display='';
+    alertEl.style.background='rgba(239,68,68,.1)';
+    alertEl.style.borderLeft='3px solid var(--red)';
+    alertEl.style.color='var(--red)';
+    alertEl.innerHTML = `⚠️ ATENÇÃO: O cronograma calculado ultrapassa o prazo em <strong>${diasAtraso} dias úteis</strong>. 
+      Término previsto: ${fmtDate(dataFimTotal)}. Aumente a capacidade ou negocie o prazo.`;
+  } else {
+    const folga = countDiasUteis(dataFimTotal.toISOString().split('T')[0], prazo, diasSem);
+    alertEl.style.display='';
+    alertEl.style.background='rgba(34,197,94,.1)';
+    alertEl.style.borderLeft='3px solid var(--green)';
+    alertEl.style.color='var(--green)';
+    alertEl.innerHTML = `✅ Cronograma dentro do prazo! Término previsto: <strong>${fmtDate(dataFimTotal)}</strong>. 
+      Folga de ${folga} dias úteis.`;
+  }
+
+  // ── Timeline por setor ────────────────────────────────────────
+  const tlEl = document.getElementById('plan-timeline');
+  const totalRange = countDiasUteis(inicio, prazo, diasSem) || 1;
+
+  tlEl.innerHTML = `
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;overflow-x:auto">
+    <div style="min-width:600px">
+      <!-- Header datas -->
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:8px;padding-left:120px">
+        <span>${fmtDate(inicio)}</span>
+        <span>PRAZO: ${fmtDate(prazo)}</span>
+      </div>
+      ${SETORES_SEQ.map(s => {
+        const f = faseSetor[s];
+        const startPct = countDiasUteis(inicio, f.inicio.toISOString().split('T')[0], diasSem) / totalRange * 100;
+        const widthPct = Math.max(f.dias / totalRange * 100, 2);
+        const col = COLORS[s];
+        const ic  = ICONS[s];
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:110px;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${ic} ${s}</div>
+          <div style="flex:1;background:var(--bg3);border-radius:6px;height:32px;position:relative;overflow:hidden">
+            <div style="position:absolute;left:${startPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;
+                        height:100%;background:${col};border-radius:6px;
+                        display:flex;align-items:center;padding:0 8px;
+                        font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden">
+              ${fmtDate(f.inicio)} → ${fmtDate(f.fim)} · ${f.dias}d
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      <!-- Linha do prazo -->
+      <div style="position:relative;padding-left:120px">
+        <div style="width:2px;height:${SETORES_SEQ.length*42}px;background:var(--red);position:absolute;
+                    left:calc(120px + 99%);top:${-SETORES_SEQ.length*42}px;opacity:.7"></div>
+      </div>
+      <!-- Totais -->
+      <div style="padding-left:120px;margin-top:8px;font-size:11px;color:var(--text3)">
+        Total necessário: <strong style="color:var(--text)">${totalDiasNecessarios} dias úteis</strong> · 
+        Disponível: <strong style="color:var(--text)">${diasDisponiveis} dias úteis</strong>
+      </div>
+    </div>
+  </div>`;
+
+  // ── Gantt por desenho com datas estimadas ──────────────────────
+  // Distribui os desenhos uniformemente dentro de cada fase do setor
+  const desEl = document.getElementById('plan-gantt-des');
+  document.getElementById('plan-des-count').textContent = totalDes + ' desenhos';
+
+  // Cada desenho tem peso proporcional → data estimada dentro da fase
+  const pesoTotal = peso || 1;
+  let pesoAcum = 0;
+
+  const rows = desenhos.map(([cod, d]) => {
+    const pesoDes = d.pesoTotal || 0;
+    const fracInicio = pesoAcum / pesoTotal;
+    const fracFim    = (pesoAcum + pesoDes) / pesoTotal;
+    pesoAcum += pesoDes;
+
+    // Datas estimadas por setor para este desenho
+    const phases = SETORES_SEQ.map(s => {
+      const f = faseSetor[s];
+      const duracao = (f.fim - f.inicio);
+      const dtIni = new Date(f.inicio.getTime() + duracao * fracInicio);
+      const dtFim = new Date(f.inicio.getTime() + duracao * fracFim);
+      // Check real progress
+      const realDone = s==='Montagem' ? concluidos('Montagem').has(cod)
+                     : s==='Solda'    ? concluidos('Solda').has(cod)
+                     : s==='Acabamento' ? concluidos('Acabamento').has(cod)
+                     : false;
+      const prepPct = (() => {
+        if(s!=='Preparativo') return realDone?100:0;
+        const lotesDes = (S.os.lotes||[]).filter(l=>l.desenhos&&l.desenhos.includes(cod));
+        if(!lotesDes.length) return 0;
+        let tot=0, done=0;
+        lotesDes.forEach(l=>{
+          const ops=Object.entries(l.tarefasSel||{}).filter(([,v])=>v).map(([k])=>k);
+          ops.forEach(op=>{tot++;const qp=qtdProdLoteOp(l.material+'||'+l.comprimento,op);done+=Math.min(qp/l.qtdTotal,1);});
+        });
+        return tot>0?Math.round(done/tot*100):0;
+      })();
+      const pct = s==='Preparativo' ? prepPct : realDone ? 100 : 0;
+      return { s, dtIni, dtFim, pct, col: COLORS[s], ic: ICONS[s] };
+    });
+
+    const overallPct = Math.round(phases.reduce((sum,p)=>sum+p.pct,0)/4);
+    const statusColor = overallPct===100?'var(--green)':overallPct>0?'var(--yellow)':'var(--border2)';
+
+    return `<div style="display:grid;grid-template-columns:140px 1fr;min-height:44px;
+                        border-bottom:1px solid var(--border)">
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;
+                  border-right:1px solid var(--border);position:sticky;left:0;
+                  background:var(--bg2);z-index:2">
+        <span style="width:8px;height:8px;border-radius:50%;background:${statusColor};flex-shrink:0"></span>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);font-weight:700">${cod}</div>
+          <div style="font-size:9px;color:var(--text3)">${pesoDes.toFixed(0)} kg</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:4px 6px;align-items:center">
+        ${phases.map(p => {
+          const barCol = p.pct===100?'var(--green)':p.col;
+          return `<div style="background:var(--bg3);border-radius:4px;height:28px;overflow:hidden;position:relative">
+            <div style="width:${p.pct}%;height:100%;background:${barCol};opacity:.8;transition:width .3s"></div>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 5px">
+              <div style="font-size:8px;color:${p.pct>40?'#fff':'var(--text3)'};font-weight:700;white-space:nowrap;overflow:hidden">
+                ${p.pct===100?'✓ Conc.':p.pct>0?p.pct+'%':fmtDate(p.dtIni)+' →'}
+              </div>
+              <div style="font-size:7px;color:${p.pct>40?'rgba(255,255,255,.7)':'var(--text3)'}">
+                ${p.pct===100?'':fmtDate(p.dtFim)}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  desEl.innerHTML = `
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;max-height:500px;overflow-y:auto">
+    <!-- Header -->
+    <div style="display:grid;grid-template-columns:140px 1fr;position:sticky;top:0;z-index:3;background:var(--bg3);border-bottom:2px solid var(--border2)">
+      <div style="padding:8px 10px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-right:1px solid var(--border)">Desenho</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:8px 6px">
+        ${SETORES_SEQ.map(s=>`<div style="font-size:9px;font-weight:700;color:${COLORS[s]};text-transform:uppercase;text-align:center">${ICONS[s]} ${s}</div>`).join('')}
+      </div>
+    </div>
+    ${rows}
+  </div>`;
+
+  document.getElementById('plan-resultado').style.display='';
+  toast('✓ Cronograma calculado!');
+}
+
+// ═══════════════════════════════════════════════════════
+// OS MANAGEMENT — Edit, Delete, Nova
+// ═══════════════════════════════════════════════════════
+
+function novaOS() {
+  // Auto-save current OS to server before creating new one
+  // Push current to server first
+  if(sbConfigured() && SB_TOKEN && S.os) {
+    pushToServer().catch(()=>{});
+  }
+  // Clear local state
+  S.os = null;
+  S.apontamentos = [];
+  S.escalas = [];
+  parsedXLSX = null;
+  saveS(true);
+  updateTopbar();
+  renderOS();
+  // Clear form fields
+  ['os-num','os-cli','os-prod','os-prazo'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  const dz = document.getElementById('drop-zone');
+  if(dz) {
+    dz.innerHTML = '<input type="file" id="file-inp" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this)">'
+      + '<div class="upload-icon">📂</div>'
+      + '<div class="upload-title">Arraste o Plano de Corte aqui</div>'
+      + '<div class="upload-sub">Clique para selecionar · Formato .xlsx</div>';
+    dz.onclick = function() { var fi = document.getElementById('file-inp'); if(fi) fi.click(); };
+  }
+  goPage('os');
+  toast('Pronto para criar nova OS!');
+}
+
+function editarOS() {
+  if(!S.os) return;
+  document.getElementById('edit-os-num').value  = S.os.numero  || '';
+  document.getElementById('edit-os-cli').value  = S.os.cliente || '';
+  document.getElementById('edit-os-prod').value = S.os.produto || '';
+  document.getElementById('edit-os-prazo').value = S.os.prazo  ? S.os.prazo.split('T')[0] : '';
+  openModal('modal-edit-os');
+}
+
+async function saveEditOS() {
+  const numEl   = document.getElementById('edit-os-num');
+  const numero  = numEl?.value  || '';
+  const cliente = document.getElementById('edit-os-cli')?.value  || '';
+  const produto = document.getElementById('edit-os-prod')?.value || '';
+  const prazo   = document.getElementById('edit-os-prazo')?.value || '';
+  const osId    = numEl?.dataset?.osId;
+
+  // Update local state if this is the active OS
+  if(S.os && (S.os.numero === numero || !osId)) {
+    S.os.numero  = numero  || S.os.numero;
+    S.os.cliente = cliente || S.os.cliente;
+    S.os.produto = produto || S.os.produto;
+    S.os.prazo   = prazo   || S.os.prazo;
+    saveS();
+    renderOS();
+    updateTopbar();
+  }
+
+  // Update directly in Supabase if online
+  if(sbConfigured() && SB_TOKEN && osId) {
+    try {
+      await sbReq('PATCH',
+        '/rest/v1/ordens?id=eq.' + osId,
+        { numero, cliente, produto, prazo: prazo || null }, true);
+      await renderMinhasOS();
+    } catch(e) {
+      toast('Aviso: ' + e.message);
+    }
+  } else if(sbConfigured() && SB_TOKEN) {
+    pushToServer().catch(()=>{});
+    await renderMinhasOS();
+  }
+
+  closeModal('modal-edit-os');
+  toast('✓ OS atualizada!');
+}
+
+async function confirmarDeleteOS() {
+  if(!S.os) return;
+  if(!confirm('Excluir a OS ' + S.os.numero + ' e TODOS os apontamentos? Esta ação não pode ser desfeita.')) return;
+
+  // Delete from Supabase if online
+  if(sbConfigured() && SB_TOKEN) {
+    try {
+      const ordens = await sbReq('GET',
+        '/rest/v1/ordens?numero=eq.' + encodeURIComponent(S.os.numero) + '&select=id',
+        null, true);
+      if(ordens?.length) {
+        const osId = ordens[0].id;
+        await sbReq('DELETE', '/rest/v1/apontamentos?os_id=eq.' + osId, null, true);
+        await sbReq('DELETE', '/rest/v1/escalas?os_id=eq.'      + osId, null, true);
+        await sbReq('DELETE', '/rest/v1/ordens?id=eq.'          + osId, null, true);
+        toast('✓ OS excluída do servidor!');
+      }
+    } catch(e) {
+      toast('Erro ao excluir do servidor: ' + e.message, 'err');
+    }
+  }
+
+  // Clear local state
+  S.os = null; S.apontamentos = []; S.escalas = [];
+  parsedXLSX = null;
+  saveS(true);
+  updateTopbar();
+  await renderMinhasOS().catch(()=>{});
+  goPage('minhasOS');
+  toast('OS excluída!');
+}
+
+
+async function deleteOSById(osId, numero) {
+  if(!confirm('Excluir OS ' + numero + ' e todos os apontamentos?')) return;
+  try {
+    await sbReq('DELETE', '/rest/v1/apontamentos?os_id=eq.' + osId, null, true);
+    await sbReq('DELETE', '/rest/v1/escalas?os_id=eq.'      + osId, null, true);
+    await sbReq('DELETE', '/rest/v1/ordens?id=eq.'          + osId, null, true);
+    // Clear local if was active
+    if(S.os?.numero === numero) {
+      S.os = null; S.apontamentos = []; S.escalas = [];
+      parsedXLSX = null; saveS(true); updateTopbar();
+    }
+    toast('✓ OS ' + numero + ' excluída!');
+    renderMinhasOS();
+  } catch(e) {
+    toast('Erro: ' + e.message, 'err');
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════
+// BULK CONCLUIR — MONTAGEM / SOLDA / ACABAMENTO
+// ═══════════════════════════════════════════════════════
+
+function updDesSelCount(prefix) {
+  const chks = document.querySelectorAll('.des-chk[data-setor]:checked');
+  // Filter only for this prefix's setor
+  const cnt = Array.from(chks).filter(c => {
+    const par = document.getElementById(prefix+'-des-list');
+    return par && par.contains(c);
+  }).length;
+  const el  = document.getElementById(prefix+'-sel-count');
+  const btn = document.getElementById(prefix+'-bulk-btn');
+  if(el)  el.textContent   = cnt + ' selecionados';
+  if(btn) btn.style.display = cnt > 0 ? '' : 'none';
+}
+
+function selTodosSetor(prefix, setor) {
+  const par  = document.getElementById(prefix+'-des-list');
+  if(!par) return;
+  const chks   = par.querySelectorAll('.des-chk');
+  const allChk = Array.from(chks).every(c => c.checked);
+  chks.forEach(c => { c.checked = !allChk; });
+  updDesSelCount(prefix);
+}
+
+function bulkConcluirSetor(prefix, setor) {
+  const par  = document.getElementById(prefix+'-des-list');
+  if(!par) return;
+  const chks = Array.from(par.querySelectorAll('.des-chk:checked'));
+  if(!chks.length) { toast('Nenhum desenho selecionado.', 'err'); return; }
+
+  const desenhos = chks.map(c => c.getAttribute('data-cod')).filter(Boolean);
+  const op = S.operadores?.[0];
+  const opId = op?.id || 'gestor';
+  
+  desenhos.forEach(cod => {
+    const d = S.os?.desenhos?.[cod];
+    if(!d) return;
+    S.apontamentos.push({
+      id:         null,  // null = needs to be pushed to server
+      ts:         new Date().toISOString(),
+      setor:      setor,
+      operadorId: opId,
+      tipo:       'desenho',
+      ref:        cod,
+      qtd:        1,
+      peso:       d.pesoTotal || 0,
+      turno:      'Diurno',
+      obs:        'Lançamento em lote',
+      emAberto:   false,
+      modo:       'concluido',
+      osNumero:   S.os?.numero
+    });
+  });
+
+  saveS();
+  toast('✅ ' + desenhos.length + ' desenhos concluídos em ' + setor + '!');
+  renderSetor(prefix, setor);
+  renderDash();
+  // Sync to server
+  if(sbConfigured() && SB_TOKEN) {
+    pushToServer().catch(()=>{});
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════
+// CNC CORTE DE CHAPA
+// ═══════════════════════════════════════════════════════
+
+// CNC Chapa: automático por material (CH/PL) — sem form manual
+function toggleCNCChapa() {}  // kept for compat
+function getCNCData() { return null; }  // CNC now auto-detected from material type
+
+
+
+function renderGanttCharts() {
+  const el = document.getElementById('gantt-charts');
+  if(!el || !S.os) return;
+
+  const desenhos = Object.keys(S.os.desenhos);
+  const total = desenhos.length;
+
+  // Calc per-setor stats
+  const setores = [
+    { key:'prep',  label:'Preparativo', color:'var(--prep)',  icon:'⚙' },
+    { key:'mont',  label:'Montagem',    color:'var(--mont)',  icon:'🔧' },
+    { key:'sold',  label:'Solda',       color:'var(--sold)',  icon:'🔥' },
+    { key:'acab',  label:'Acabamento',  color:'var(--acab)',  icon:'✨' },
+  ];
+
+  const stats = {};
+  let prepPctSum = 0;
+
+  desenhos.forEach(cod => {
+    const s = calcDesenhoStatus(cod);
+    if(!s) return;
+    prepPctSum += s.prepPct;
+    stats.mont  = (stats.mont  || 0) + (s.montPct  === 100 ? 1 : 0);
+    stats.sold  = (stats.sold  || 0) + (s.soldPct  === 100 ? 1 : 0);
+    stats.acab  = (stats.acab  || 0) + (s.acabPct  === 100 ? 1 : 0);
+  });
+
+  const prepAvg = total > 0 ? Math.round(prepPctSum / total) : 0;
+  const montPct = total > 0 ? Math.round((stats.mont||0) / total * 100) : 0;
+  const soldPct = total > 0 ? Math.round((stats.sold||0) / total * 100) : 0;
+  const acabPct = total > 0 ? Math.round((stats.acab||0) / total * 100) : 0;
+
+  const pcts = { prep: prepAvg, mont: montPct, sold: soldPct, acab: acabPct };
+  const counts = {
+    prep: `${prepAvg}% médio`,
+    mont: `${stats.mont||0}/${total} desenhos`,
+    sold: `${stats.sold||0}/${total} desenhos`,
+    acab: `${stats.acab||0}/${total} desenhos`,
+  };
+
+  el.innerHTML = setores.map(s => {
+    const pct = pcts[s.key];
+    const count = counts[s.key];
+    const r = 42; // circle radius
+    const circ = 2 * Math.PI * r;
+    const dash = circ * pct / 100;
+    const gap  = circ - dash;
+    const col  = s.color;
+
+    // Donut SVG
+    const svg = `<svg viewBox="0 0 100 100" width="110" height="110" style="flex-shrink:0">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--border2)" stroke-width="12"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="12"
+        stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"
+        stroke-linecap="round"
+        transform="rotate(-90 50 50)"
+        style="transition:stroke-dasharray .6s ease"/>
+      <text x="50" y="46" text-anchor="middle" fill="var(--text)"
+        style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900">${pct}%</text>
+      <text x="50" y="60" text-anchor="middle" fill="var(--text3)"
+        style="font-family:'Barlow',sans-serif;font-size:9px">concluído</text>
+    </svg>`;
+
+    // Breakdown mini bars
+    let breakdown = '';
+    if(s.key === 'prep') {
+      // Show lote ops breakdown
+      const totalLotes = (S.os.lotes||[]).length;
+      const lotesOk = (S.os.lotes||[]).filter(l => lotePronto(l)).length;
+      breakdown = `<div style="font-size:10px;color:var(--text3);margin-top:6px">
+        ${lotesOk}/${totalLotes} lotes prontos
+      </div>`;
+    } else {
+      const setor = s.key==='mont'?'Montagem':s.key==='sold'?'Solda':'Acabamento';
+      const concl = concluidos(setor).size;
+      breakdown = `<div style="font-size:10px;color:var(--text3);margin-top:6px">${count}</div>`;
+    }
+
+    // KG produced
+    const setor = s.key==='prep'?'Preparativo':s.key==='mont'?'Montagem':s.key==='sold'?'Solda':'Acabamento';
+    const kg = kgSetor(setor);
+
+    return `<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;
+                        padding:16px;border-top:3px solid ${col};display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${col};margin-bottom:4px">
+        ${s.icon} ${s.label}
+      </div>
+      ${svg}
+      ${breakdown}
+      <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:2px">
+        ${kg.toFixed(1)} kg produzidos
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGantt() {
+  const wrap = document.getElementById('gantt-content');
+  if(!wrap) return;
+
+  if(!S.os) {
+    wrap.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div>Carregue uma OS para ver o cronograma.</div></div>';
+    document.getElementById('gantt-charts').innerHTML = '';
+    return;
+  }
+  renderGanttCharts();
+
+  const q      = (document.getElementById('gantt-search')?.value || '').toLowerCase();
+  const filter = document.getElementById('gantt-filter')?.value || 'todos';
+
+  // Build desenho list with status
+  const desenhos = Object.entries(S.os.desenhos)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([cod, d]) => ({ cod, d, ...calcDesenhoStatus(cod) }))
+    .filter(item => {
+      if(q && !item.cod.toLowerCase().includes(q)) return false;
+      if(filter !== 'todos' && item.status !== filter) return false;
+      return true;
+    });
+
+  // Summary
+  const total    = Object.keys(S.os.desenhos).length;
+  const concl    = desenhos.filter(i=>i.status==='concluido').length;
+  const andando  = desenhos.filter(i=>i.status==='em_andamento').length;
+  const pend     = desenhos.filter(i=>i.status==='pendente').length;
+  const sumEl = document.getElementById('gantt-summary');
+  if(sumEl) sumEl.textContent = `${desenhos.length} de ${total} mostrados · ✅ ${concl} concluídos · 🔄 ${andando} em andamento · ⏳ ${pend} pendentes`;
+
+  const SETOR_COLORS = {
+    prep:'var(--prep)', mont:'var(--mont)', sold:'var(--sold)', acab:'var(--acab)'
+  };
+  const SETOR_LABELS = { prep:'Preparativo', mont:'Montagem', sold:'Solda', acab:'Acabamento' };
+
+  function statusDot(status) {
+    const col = status==='concluido'?'var(--green)':status==='em_andamento'?'var(--yellow)':'var(--border2)';
+    return `<span class="gantt-status-dot" style="background:${col}"></span>`;
+  }
+
+  function barHtml(pct, color, setor) {
+    const filled = pct > 0;
+    const bg = filled ? color : 'var(--border2)';
+    const opacity = pct===100 ? 1 : pct>0 ? 0.85 : 0.3;
+    return `<div class="gantt-bar-wrap">
+      <div class="gantt-bar-label" style="color:${filled?color:'var(--text3)'}">${SETOR_LABELS[setor]}</div>
+      <div class="gantt-bar-track">
+        <div class="gantt-bar-fill" 
+             style="width:${pct}%;background:${bg};opacity:${opacity}"
+             data-pct="${pct>0?pct+'%':''}">
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Group by description type (GUARDA-CORPO, CORRIMÃO, ESCADA)
+  // Use last 4 digits to group: TIB-1.2 - 4xxx
+  const groups = {};
+  desenhos.forEach(item => {
+    const num = parseInt(item.cod.replace(/\D/g,'').slice(-4)) || 0;
+    // Group by hundreds
+    const grp = Math.floor(num / 100) * 100;
+    const grpKey = `${grp}–${grp+99}`;
+    if(!groups[grpKey]) groups[grpKey] = [];
+    groups[grpKey].push(item);
+  });
+
+  // Column header
+  let out = `
+  <div class="gantt-col-hdr">
+    <div class="gantt-col-hdr-label">Desenho</div>
+    <div class="gantt-col-hdr-bars">
+      <span style="color:var(--prep)">⚙ Preparativo</span>
+      <span style="color:var(--mont)">🔧 Montagem</span>
+      <span style="color:var(--sold)">🔥 Solda</span>
+      <span style="color:var(--acab)">✨ Acabamento</span>
+    </div>
+  </div>`;
+
+  if(desenhos.length === 0) {
+    out += '<div class="empty" style="padding:32px"><div class="empty-icon">🔍</div><div>Nenhum desenho encontrado com esses filtros.</div></div>';
+    wrap.innerHTML = out;
+    return;
+  }
+
+  Object.entries(groups).forEach(([grpKey, items]) => {
+    // Group header
+    const grpDone  = items.filter(i=>i.status==='concluido').length;
+    const grpTotal = items.length;
+    const grpPct   = Math.round(grpDone/grpTotal*100);
+    out += `<div class="gantt-group-hdr">
+      <span>Série ${grpKey}</span>
+      <span style="color:${grpPct===100?'var(--green)':grpPct>0?'var(--yellow)':'var(--text3)'}">${grpDone}/${grpTotal} (${grpPct}%)</span>
+    </div>`;
+
+    items.forEach(({cod, d, prepPct, montPct, soldPct, acabPct, status}) => {
+      const peso = d.pesoTotal ? d.pesoTotal.toFixed(1)+' kg' : '';
+      out += `<div class="gantt-row">
+        <div class="gantt-label">
+          ${statusDot(status)}
+          <div>
+            <div>${cod}</div>
+            <div class="gl-desc">${peso} · ${d.itens?.length||0} mat</div>
+          </div>
+        </div>
+        <div class="gantt-bars">
+          ${barHtml(prepPct,'var(--prep)','prep')}
+          ${barHtml(montPct,'var(--mont)','mont')}
+          ${barHtml(soldPct,'var(--sold)','sold')}
+          ${barHtml(acabPct,'var(--acab)','acab')}
+        </div>
+      </div>`;
+    });
+  });
+
+  wrap.innerHTML = out;
+}
+
+function renderRel() {
+  currentPage = 'relatorio';
+  if(!S.os) { document.getElementById('rel-setores').innerHTML='<p style="color:var(--text3)">Carregue uma OS primeiro.</p>'; return; }
+  document.getElementById('rel-setores').innerHTML = SETORES.map(s=>{
+    const kg=kgSetor(s); const p=S.os.pesoTotal>0?(kg/S.os.pesoTotal*100):0;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:${SC[s]};font-weight:700">${s}</span><span class="mono">${kg.toFixed(1)} kg · ${p.toFixed(1)}%</span></div>
+      <div class="pbar"><div class="pfill" style="width:${p.toFixed(1)}%;background:${SC[s]}"></div></div>
+    </div>`;
+  }).join('');
+  const byOp = {};
+  S.apontamentos.forEach(a=>{ if(!byOp[a.operadorId]) byOp[a.operadorId]={kg:0,n:0}; byOp[a.operadorId].kg+=a.peso||0; byOp[a.operadorId].n++; });
+  const om = opMap();
+  const sorted = Object.entries(byOp).sort((a,b)=>b[1].kg-a[1].kg);
+  document.getElementById('rel-ops').innerHTML = sorted.length ? sorted.map(([id,d])=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div class="op-avatar">${(om[id]||'??').slice(0,2).toUpperCase()}</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${om[id]||'?'}</div><div style="font-size:11px;color:var(--text3)">${d.n} apontamentos</div></div>
+      <div class="mono" style="color:var(--green);font-weight:700">${d.kg.toFixed(1)} kg</div>
+    </div>`).join('') : '<p style="color:var(--text3)">Sem dados.</p>';
+}
+
+// ═══════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════
+// openModal defined below with equipe support
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => { if(e.target.classList.contains('modal-ov')) e.target.classList.remove('open'); });
+
+function openPrepModal() {
+  if(!S.os) { toast('Carregue uma OS primeiro.', 'err'); return; }
+  // Get operador names from escalas if available
+  const ops = S.operadores || [];
+  const escalaHoje = (S.escalas||[]).filter(e => e.data===new Date().toISOString().split('T')[0] && e.setor==='Preparativo');
+  const nomesEscala = escalaHoje.flatMap(e => (e.nomes||'').split(',').map(n=>n.trim()).filter(Boolean));
+  
+  // Build operator options: from S.operadores OR from escala names
+  let opHtml = ops.filter(o => opSetores(o).includes('Preparativo')).map(o=>{
+    const ab = atividadeAberta(o.id);
+    return `<option value="${o.id}">${o.nome}${ab?' ⚡':'  ✓'}</option>`;
+  }).join('');
+  
+  // Add escala names as quick options if not already in operadores
+  if(nomesEscala.length && !opHtml) {
+    opHtml = nomesEscala.map(n => `<option value="${n}">${n}</option>`).join('');
+  }
+  if(!opHtml) opHtml = '<option value="operador1">Operador 1</option>';
+  document.getElementById('prep-op').innerHTML = opHtml;
+
+  // Only show lotes that still have pending operations
+  const lotes = S.os.lotes || [];
+  const available = lotes.map((l,i) => ({l,i})).filter(({l}) => loteTemOpDisponivel(l));
+  
+  document.getElementById('prep-lote').innerHTML = available.map(({l,i}) => {
+    const ops = loteOpsDisponiveis(l);
+    return `<option value="${i}">${l.material} | ${l.comprimento}mm | ${l.qtdTotal} pçs [${ops.join(', ')}]</option>`;
+  }).join('') || '<option value="">✅ Todos os lotes concluídos!</option>';
+
+  document.getElementById('prep-qtd').value='';
+  document.getElementById('prep-kg-calc').value='';
+  document.getElementById('prep-obs').value='';
+  // Reset concluido toggle
+  const valEl = document.getElementById('prep-modo-conc-val');
+  if(valEl) {
+    valEl.value = '0';
+    const icon  = document.getElementById('conc-icon');
+    const label = document.getElementById('conc-label');
+    const badge = document.getElementById('conc-badge');
+    const card  = document.getElementById('lbl-concluido');
+    if(icon) icon.textContent = '⬜';
+    if(label) { label.textContent='Marcar como Concluído'; label.style.color='var(--text2)'; }
+    if(badge) badge.style.display='none';
+    if(card) { card.style.borderColor='var(--border)'; card.style.background='var(--bg3)'; }
+  }
+  onLoteChange();
+  document.getElementById('modal-prep').classList.add('open');
+}
+
+function onOpTipoChange() { calcPrepKg(); }
+
+function toggleConcluido() {
+  const val = document.getElementById('prep-modo-conc-val');
+  const icon  = document.getElementById('conc-icon');
+  const label = document.getElementById('conc-label');
+  const badge = document.getElementById('conc-badge');
+  const card  = document.getElementById('lbl-concluido');
+  const done  = val.value === '0';   // toggling ON
+  val.value   = done ? '1' : '0';
+  icon.textContent  = done ? '✅' : '⬜';
+  label.textContent = done ? 'Operação Concluída!' : 'Marcar como Concluído';
+  label.style.color = done ? 'var(--green)' : 'var(--text2)';
+  badge.style.display = done ? '' : 'none';
+  card.style.borderColor = done ? 'var(--green)' : 'var(--border)';
+  card.style.background  = done ? 'rgba(34,197,94,.08)' : 'var(--bg3)';
+}
+
+function onModoChange() {}  // kept for compatibility
+
+function onLoteChange() {
+  const lotes = S.os?.lotes || [];
+  const idx = parseInt(document.getElementById('prep-lote').value);
+  const lote = lotes[idx];
+  
+  // Update op dropdown based on lote's available ops
+  if(lote) {
+    const opsDisp = loteOpsDisponiveis(lote);
+    const opSel = document.getElementById('prep-op-tipo');
+    opSel.innerHTML = opsDisp.map(op => `<option value="${op}">${op}</option>`).join('') 
+      || '<option>— Sem operações pendentes —</option>';
+  }
+  if(!lote) { document.getElementById('prep-lote-info').style.display='none'; return; }
+
+  // Calc already produced for this lote
+  const loteKey = lote.material + '||' + lote.comprimento;
+  const jaProd = S.apontamentos
+    .filter(a => a.setor==='Preparativo' && a.loteKey===loteKey)
+    .reduce((s,a)=>s+(a.qtd||0), 0);
+  const pct = lote.qtdTotal > 0 ? Math.min(jaProd/lote.qtdTotal*100,100) : 0;
+
+  document.getElementById('prep-lote-info').style.display='';
+  document.getElementById('lote-qtd-total').textContent = lote.qtdTotal + ' pçs';
+  document.getElementById('lote-peso-unit').textContent = lote.pesoUnit.toFixed(4) + ' kg';
+  document.getElementById('lote-peso-total').textContent = lote.pesoTotal.toFixed(2) + ' kg';
+  document.getElementById('lote-ja-prod').textContent = jaProd + ' pçs (' + pct.toFixed(0) + '%)';
+  document.getElementById('lote-prog-bar').style.width = pct.toFixed(1) + '%';
+
+  // Update op dropdown based on lote type
+  const opTipo = document.getElementById('prep-op-tipo');
+  // Remove dobrar if lote doesn't have dobra
+  for(let opt of opTipo.options) {
+    if(opt.value==='Dobrar') opt.disabled = !lote.temDobra;
+    if(opt.value==='Furar')  opt.disabled = !lote.temFuro;
+  }
+  calcPrepKg();
+}
+
+function calcPrepKg() {
+  const lotes = S.os?.lotes || [];
+  const idx = parseInt(document.getElementById('prep-lote').value);
+  const lote = lotes[idx];
+  const qtd = parseFloat(document.getElementById('prep-qtd').value) || 0;
+  if(lote && qtd > 0) {
+    const kg = qtd * lote.pesoUnit;
+    document.getElementById('prep-kg-calc').value = kg.toFixed(4) + ' kg';
+  } else {
+    document.getElementById('prep-kg-calc').value = '—';
+  }
+}
+
+function syncMaterial() { onLoteChange(); }
+
+function openDesenhoModal(setor) {
+  if(!S.os) { toast('Carregue uma OS primeiro.', 'err'); return; }
+  document.getElementById('des-setor').value = setor;
+  document.getElementById('modal-des-title').textContent = '📐 Concluir Desenho — ' + setor;
+  const ops = S.operadores || [];
+  const escalaHojeD = (S.escalas||[]).filter(e => e.data===new Date().toISOString().split('T')[0] && e.setor===setor);
+  const nomesEscalaD = escalaHojeD.flatMap(e => (e.nomes||'').split(',').map(n=>n.trim()).filter(Boolean));
+  let opHtmlD = ops.filter(o => opSetores(o).includes(setor)).map(o=>{
+    const ab = atividadeAberta(o.id);
+    return `<option value="${o.id}">${o.nome}${ab?' ⚡':'  ✓'}</option>`;
+  }).join('');
+  if(nomesEscalaD.length && !opHtmlD) {
+    opHtmlD = nomesEscalaD.map(n => `<option value="${n}">${n}</option>`).join('');
+  }
+  if(!opHtmlD) opHtmlD = '<option value="operador1">Operador 1</option>';
+  document.getElementById('des-op').innerHTML = opHtmlD;
+  const con = concluidos(setor);
+  const desenhos = Object.keys(S.os.desenhos).sort();
+  
+  // Filter based on sequential rules
+  const desenhosFiltrados = desenhos.filter(cod => {
+    if(setor === 'Montagem') return desenhoLiberadoMontagem(cod);
+    if(setor === 'Solda')    return desenhoLiberadoSolda(cod);
+    return true; // Acabamento: sem restrição adicional
+  });
+
+  if(desenhosFiltrados.length === 0) {
+    let msg = setor === 'Montagem'
+      ? '⏳ Nenhum desenho liberado ainda. Conclua todos os lotes do Preparativo primeiro.'
+      : '⏳ Nenhum desenho liberado. Conclua a Montagem primeiro.';
+    document.getElementById('des-desenho').innerHTML = `<option value="">${msg}</option>`;
+    document.getElementById('des-info-box').style.display='none';
+    return;
+  }
+
+  document.getElementById('des-desenho').innerHTML = desenhosFiltrados.map(cod=>`<option value="${cod}"${con.has(cod)?' style="color:var(--green)"':''}>${con.has(cod)?'✓ ':''} ${cod}</option>`).join('');
+  showDesInfo();
+  document.getElementById('des-obs').value='';
+  openModal('modal-des');
+}
+
+function showDesInfo() {
+  const cod = document.getElementById('des-desenho').value;
+  if(!cod || !S.os?.desenhos?.[cod]) { document.getElementById('des-info-box').style.display='none'; return; }
+  const d = S.os.desenhos[cod];
+  document.getElementById('des-info-box').style.display='';
+  document.getElementById('des-info-content').innerHTML = d.itens.slice(0,5).map(it=>`
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
+      <span class="mono" style="color:var(--blue)">${it.mat}</span>
+      <span style="color:var(--text2)">${it.comp}mm × ${it.qtd}</span>
+      <span style="color:var(--green)">${it.pesT.toFixed(2)} kg</span>
+    </div>`).join('') + (d.itens.length>5?`<div style="font-size:11px;color:var(--text3);margin-top:4px">+${d.itens.length-5} itens · Total: ${d.pesoTotal.toFixed(2)} kg</div>`:`<div style="font-size:11px;color:var(--text2);margin-top:4px;font-weight:600">Total: ${d.pesoTotal.toFixed(2)} kg</div>`);
+}
+
+function openOpModal() {
+  document.getElementById('op-edit-id').value='';
+  document.getElementById('op-nome').value='';
+  document.getElementById('op-hdia').value=8;
+  document.getElementById('op-sal').value='';
+  document.getElementById('op-setor').value='Preparativo';
+  document.getElementById('op-turno').value='Manhã';
+  document.getElementById('modal-op-title').textContent='👷 Cadastrar Operador';
+  calData={};
+  resetPills([]);
+  resetModalTabs();
+  openModal('modal-op');
+}
+
+function resetModalTabs() {
+  document.querySelectorAll('#modal-op .tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('#modal-op .tab-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE APONTAMENTOS
+// ═══════════════════════════════════════════════════════
+function savePrepApt() {
+  const opId = document.getElementById('prep-op').value;
+  if(!opId) { toast('Selecione um operador.','err'); return; }
+  const loteIdx = parseInt(document.getElementById('prep-lote').value);
+  const lote = S.os?.lotes?.[loteIdx];
+  if(!lote) { toast('Selecione um lote.','err'); return; }
+  const operacao = document.getElementById('prep-op-tipo').value;
+  if(!operacao) { toast('Selecione a operação.','err'); return; }
+
+  const modo = document.getElementById('prep-modo-conc-val')?.value === '1' ? 'concluido' : 'concluido'; // always concluido now
+  const loteKey = lote.material + '||' + lote.comprimento;
+
+  // Calc qtd: concluido = lote total minus already done; parcial = input
+  const jaProd = qtdProdLoteOp(loteKey, operacao);
+  let qtd, peso;
+  // Check if marked as concluido
+  const marcadoConcluido = document.getElementById('prep-modo-conc-val')?.value === '1';
+  if(!marcadoConcluido) { toast('Marque a operação como Concluída antes de salvar.','err'); return; }
+  qtd = Math.max(0, lote.qtdTotal - jaProd);
+  if(qtd <= 0) { toast('Esta operação já está 100% concluída!','err'); return; }
+  // Peso só é contado na ÚLTIMA operação do lote (evita multiplicação por nº de ops)
+  const opsDoLote = Object.entries(lote.tarefasSel||{}).filter(([,v])=>v).map(([k])=>k);
+  const outrasOpsConc = opsDoLote.filter(op2 => op2!==operacao && loteOpConcluida(lote,op2)).length;
+  const isLastOp = outrasOpsConc === opsDoLote.length - 1;
+  peso = isLastOp ? Math.round(lote.pesoTotal * 10000)/10000 : 0;
+
+  const turno = document.getElementById('prep-turno').value;
+  const obs = document.getElementById('prep-obs').value;
+  const ref = `${operacao}: ${lote.material} | ${lote.comprimento}mm`;
+
+  S.apontamentos.push({
+    id: Date.now(), ts: new Date().toISOString(),
+    setor:'Preparativo', operadorId:opId, tipo:'lote',
+    ref, operacao, material:lote.material,
+    comprimento:lote.comprimento, loteKey,
+    qtd, pesoUnit:lote.pesoUnit, peso,
+    turno, obs, emAberto:false,
+    modo, osNumero:S.os?.numero
+  });
+  saveS(); closeModal('modal-prep');
+  const msg = modo==='concluido' ? `✅ Operação concluída! ${qtd} pçs · ${peso.toFixed(2)} kg` : `✓ ${qtd} pçs · ${peso.toFixed(2)} kg registrados`;
+  toast(msg);
+  // Reset toggle
+  const vEl = document.getElementById('prep-modo-conc-val');
+  if(vEl) vEl.value='0';
+  const ic=document.getElementById('conc-icon'); if(ic) ic.textContent='⬜';
+  const lb=document.getElementById('conc-label'); if(lb){lb.textContent='Marcar como Concluído';lb.style.color='var(--text2)';}
+  const bg=document.getElementById('conc-badge'); if(bg) bg.style.display='none';
+  const cd=document.getElementById('lbl-concluido'); if(cd){cd.style.borderColor='var(--border)';cd.style.background='var(--bg3)';}
+  renderPrep(); renderDash();
+}
+
+function saveDesApt() {
+  const setor = document.getElementById('des-setor').value;
+  const opId = document.getElementById('des-op').value;
+  if(!opId) { toast('Selecione um operador.','err'); return; }
+  if(opBloqueado(opId,setor)) {
+    const ab = atividadeAberta(opId);
+    toast('⚠️ Operador com atividade aberta em '+ab.setor+'. Encerre primeiro.','err'); return;
+  }
+  const cod = document.getElementById('des-desenho').value;
+  if(!cod) { toast('Selecione um desenho.','err'); return; }
+  const peso = S.os?.desenhos?.[cod]?.pesoTotal || 0;
+  const turno = document.getElementById('des-turno').value;
+  const obs = document.getElementById('des-obs').value;
+  S.apontamentos.push({ id:Date.now(), ts:new Date().toISOString(), setor, operadorId:opId, tipo:'desenho', ref:cod, peso, turno, obs, emAberto:true, osNumero:S.os?.numero });
+  saveS(); closeModal('modal-des'); toast('✓ Desenho concluído!');
+  const pageMap = {Montagem:'mont',Solda:'sold',Acabamento:'acab'};
+  renderSetor(pageMap[setor],setor); renderDash();
+}
+
+// ═══════════════════════════════════════════════════════
+// OPERADORES
+// ═══════════════════════════════════════════════════════
+const PILL_MAP = { Preparativo:'on-prep', Montagem:'on-mont', Solda:'on-sold', Acabamento:'on-acab' };
+
+function togglePill(el) {
+  const s = el.dataset.s;
+  const principal = document.getElementById('op-setor').value;
+  if(s===principal){ toast('Setor principal já incluído.'); return; }
+  const isOn = Object.values(PILL_MAP).some(c=>el.classList.contains(c));
+  if(isOn) { el.className='spill'; }
+  else { el.className='spill '+PILL_MAP[s]; }
+}
+
+function resetPills(extras) {
+  document.querySelectorAll('.sec-pills .spill').forEach(p=>{
+    p.className='spill';
+    if(extras.includes(p.dataset.s)) p.classList.add(PILL_MAP[p.dataset.s]||'');
+  });
+}
+
+function saveOp() {
+  const nome = document.getElementById('op-nome').value.trim();
+  if(!nome){ toast('Informe o nome.','err'); return; }
+  const setor = document.getElementById('op-setor').value;
+  const extras = Array.from(document.querySelectorAll('.sec-pills .spill')).filter(p=>{
+    return Object.values(PILL_MAP).some(c=>p.classList.contains(c));
+  }).map(p=>p.dataset.s).filter(s=>s!==setor);
+  const setoresSecundarios = [setor, ...extras];
+  const editId = document.getElementById('op-edit-id').value;
+  const isDiurno = document.getElementById('cal-turno-diurno')?.checked !== false;
+  const turno = isDiurno ? 'Diurno' : 'Noturno';
+  const turnoDetalhe = isDiurno ? '07h–12h / 13h–17h (sem hora extra)' : '19h–22h / 23h–05h (sem hora extra)';
+  const hdia = isDiurno ? 9 : 7;
+  const data = { nome, setor, setoresSecundarios, turno, turnoDetalhe, hdia, salario:parseFloat(document.getElementById('op-sal').value)||0, calendario:{...calData} };
+  if(editId) {
+    const idx = S.operadores.findIndex(o=>o.id===editId);
+    if(idx>=0){ data.id=editId; S.operadores[idx]=data; }
+  } else {
+    data.id = Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    S.operadores.push(data);
+  }
+  saveS(); closeModal('modal-op'); renderOps(); toast(editId?'✓ Atualizado!':'✓ Operador cadastrado!');
+}
+
+function editOp(i) {
+  const o = S.operadores[i];
+  document.getElementById('op-edit-id').value=o.id;
+  document.getElementById('op-nome').value=o.nome;
+  document.getElementById('op-hdia').value=o.hdia;
+  document.getElementById('op-sal').value=o.salario||0;
+  document.getElementById('op-setor').value=o.setor;
+  // Restore turno radio
+  const isDiurno = !o.turno || o.turno==='Diurno';
+  const rdD = document.getElementById('cal-turno-diurno');
+  const rdN = document.getElementById('cal-turno-noturno');
+  if(rdD) rdD.checked = isDiurno;
+  if(rdN) rdN.checked = !isDiurno;
+  setTimeout(onCalTurnoChange, 50);
+  document.getElementById('modal-op-title').textContent='✎ Editar — '+o.nome;
+  calData = o.calendario ? {...o.calendario} : {};
+  resetPills((o.setoresSecundarios||[]).filter(s=>s!==o.setor));
+  resetModalTabs();
+  openModal('modal-op');
+}
+
+function editOpCal(i) {
+  editOp(i);
+  // Switch to calendar tab
+  const calTab = document.querySelector('#modal-op .tab[data-tab="tab-cal"]');
+  if(calTab) { switchTab(calTab); }
+}
+
+function removeOp(i) {
+  if(!confirm('Remover operador?')) return;
+  S.operadores.splice(i,1); saveS(); renderOps();
+}
+
+// ═══════════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════════
+const DIAS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function calKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+function calNav(dir) { calM+=dir; if(calM>11){calM=0;calY++;} if(calM<0){calM=11;calY--;} renderCal(); }
+
+function renderCal() {
+  const label = new Date(calY,calM,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('cal-month-lbl').textContent = label.charAt(0).toUpperCase()+label.slice(1);
+  const firstDow = new Date(calY,calM,1).getDay();
+  const daysInM = new Date(calY,calM+1,0).getDate();
+  const today = new Date(); const todayKey = calKey(today.getFullYear(),today.getMonth(),today.getDate());
+  let html = DIAS_PT.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+  for(let i=0;i<firstDow;i++) html+=`<div class="cal-d other" style="cursor:default"> </div>`;
+  for(let d=1;d<=daysInM;d++){
+    const key=calKey(calY,calM,d);
+    const dow=new Date(calY,calM,d).getDay();
+    let st=calData[key]; if(st===undefined) st=(dow===0||dow===6)?'off':'work';
+    html+=`<button class="cal-d ${st}${key===todayKey?' today':''}" onclick="calToggle('${key}')">${d}</button>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function calToggle(key) {
+  const dow=new Date(key).getDay(); const def=(dow===0||dow===6)?'off':'work';
+  const cur=calData[key]!==undefined?calData[key]:def;
+  const next={work:'off',off:'holiday',holiday:'work'};
+  calData[key]=next[cur]||'work'; renderCal();
+}
+
+function calPreset(p) {
+  const days=new Date(calY,calM+1,0).getDate();
+  for(let d=1;d<=days;d++){
+    const key=calKey(calY,calM,d); const dow=new Date(calY,calM,d).getDay();
+    if(p==='seg-sex')    calData[key]=(dow===0||dow===6)?'off':'work';
+    else if(p==='seg-sab')    calData[key]=(dow===0)?'off':'work';
+    else if(p==='todos')      calData[key]='work';
+    else if(p==='limpar')     delete calData[key];
+    else if(p==='limpar-tudo') { calData = {}; break; }
+  }
+  renderCal();
+}
+
+function onCalTurnoChange() {
+  const diurno = document.getElementById('cal-turno-diurno')?.checked;
+  const infoEl = document.getElementById('cal-horas-info');
+  const lblD = document.getElementById('lbl-turno-d');
+  const lblN = document.getElementById('lbl-turno-n');
+  if(lblD) lblD.style.borderColor = diurno ? 'var(--blue)' : 'var(--border)';
+  if(lblN) lblN.style.borderColor = !diurno ? 'var(--purple)' : 'var(--border)';
+  if(infoEl) {
+    infoEl.style.borderLeftColor = diurno ? 'var(--blue)' : 'var(--purple)';
+    infoEl.innerHTML = diurno
+      ? '☀️ Diurno: <strong>9h/dia</strong> (07h–12h + 13h–17h, intervalo excluído). Sem hora extra.'
+      : '🌙 Noturno: <strong>7h/dia</strong> (19h–22h + 23h–05h, intervalo excluído). Sem hora extra.';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// OS RESET
+// ═══════════════════════════════════════════════════════
+function resetOS() {
+  if(!confirm('Apagar OS e todos os apontamentos?')) return;
+  S.os=null; S.apontamentos=[]; S.escalas=[]; parsedXLSX=null; saveS(true);
+  const dz=document.getElementById('drop-zone');
+  dz.innerHTML='<div class="upload-icon">📂</div><div class="upload-title">Arraste o Plano de Corte aqui</div><div class="upload-sub">Clique para selecionar · Formato .xlsx (modelo OS 1608)</div>';
+  document.getElementById('os-form-area').style.display=''; document.getElementById('os-loaded').style.display='none';
+  updateTopbar(); toast('OS removida.');
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
+function exportExcel() {
+  if(!S.os){ toast('Nenhuma OS.','err'); return; }
+  const wb=XLSX.utils.book_new(); const om=opMap();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['NODUS CALD'],['OS:',S.os.numero],['Cliente:',S.os.cliente],['Peso Total:',S.os.pesoTotal],[''],['SETOR','KG','%'],...SETORES.map(s=>[s,kgSetor(s).toFixed(2),(S.os.pesoTotal>0?kgSetor(s)/S.os.pesoTotal*100:0).toFixed(1)+'%'])]),'Resumo');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['DATA','HORA','SETOR','OPERADOR','TIPO','REF','MATERIAL','QTD','PESO','TURNO','STATUS'],...S.apontamentos.map(a=>{const d=new Date(a.ts);return[d.toLocaleDateString('pt-BR'),d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),a.setor,om[a.operadorId]||'—',a.tipo,a.ref||'—',a.material||'—',a.qtd||'—',(a.peso||0).toFixed(2),a.turno||'—',a.emAberto?'Aberto':'Encerrado'];})]),'Apontamentos');
+  XLSX.writeFile(wb,`NODUS CALD_${S.os.numero}_${new Date().toISOString().slice(0,10)}.xlsx`); toast('✓ Excel exportado!');
+}
+function exportJSON() {
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='nodus-cald_backup.json'; a.click(); toast('✓ Backup salvo!');
+}
+function importJSON(inp) {
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=e=>{try{S=JSON.parse(e.target.result);saveS();toast('✓ Dados restaurados!');renderDash();}catch{toast('Arquivo inválido.','err');}};r.readAsText(f);
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='ok') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.style.background=type==='err'?'var(--red)':'var(--green)';
+  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// Bind button in OS page to open modal
+document.addEventListener('click', e=>{
+  if(e.target.id==='btn-open-prep'||e.target.closest('#btn-open-prep')) openPrepModal();
+});
+
+
+// init
+updateTopbar();
+if(S.os) renderDash();
+
+// ═══════════════════════════════════════════════════════════════════
+// NODUS CALD — SUPABASE INTEGRATION
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Config — preencha após criar o projeto no Supabase ──────────
+let SB_URL   = 'https://sgohqvemeloyuqlarqng.supabase.co';
+let SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnb2hxdmVtZWxveXVxbGFycW5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg0NjAsImV4cCI6MjA5MTg0NDQ2MH0.GY4PiSxRAgOurbDJW5BnikMwPMxnVTl17AeR5JmjoMo';
+let SB_TOKEN = localStorage.getItem('sb_token') || '';
+let SB_USER  = null;
+try { SB_USER = JSON.parse(localStorage.getItem('sb_user') || 'null'); } catch{}
+
+function sbConfigured() { return !!(SB_URL && SB_KEY); }
+
+// ── HTTP helper ──────────────────────────────────────────────────
+async function sbReq(method, path, body, useToken) {
+  const headers = {
+    'Content-Type':  'application/json',
+    'apikey':        SB_KEY,
+    'Prefer':        method === 'PATCH' ? 'return=minimal' : 'return=representation'
+  };
+  if(useToken && SB_TOKEN)  headers['Authorization'] = 'Bearer ' + SB_TOKEN;
+  else if(SB_KEY)           headers['Authorization'] = 'Bearer ' + SB_KEY;
+
+  const opts = { method, headers };
+  if(body) opts.body = JSON.stringify(body);
+
+  const r = await fetch(SB_URL + path, opts);
+  if(!r.ok) {
+    const e = await r.json().catch(() => ({ message: r.statusText }));
+    const msg = e.error_description || e.message || e.error || r.statusText;
+    throw new Error(msg);
+  }
+  const ct = r.headers.get('content-type') || '';
+  return ct.includes('json') ? r.json() : null;
+}
+
+// ── Auth ─────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha  = document.getElementById('login-senha').value;
+  const url    = document.getElementById('login-apiurl').value.trim();
+  const key    = document.getElementById('login-anonkey').value.trim();
+  const btn    = document.getElementById('login-btn');
+  const err    = document.getElementById('login-err');
+
+  if(!url || !key)   { err.textContent = 'Preencha URL e Anon Key do Supabase'; return; }
+  if(!email || !senha) { err.textContent = 'Preencha email e senha'; return; }
+
+  SB_URL = url.replace(/\/$/, '');
+  SB_KEY = key;
+  localStorage.setItem('sb_url', SB_URL);
+  localStorage.setItem('sb_key', SB_KEY);
+
+  btn.textContent = 'Entrando...'; btn.disabled = true; err.textContent = '';
+  try {
+    const data = await sbReq('POST', '/auth/v1/token?grant_type=password', { email, password: senha });
+    if(!data.access_token) throw new Error(data.error_description || data.msg || 'Falha no login');
+    SB_TOKEN = data.access_token;
+    SB_USER  = data.user;
+    localStorage.setItem('sb_token', SB_TOKEN);
+    localStorage.setItem('sb_user',  JSON.stringify(SB_USER));
+    document.getElementById('modal-login').classList.remove('open');
+    document.getElementById('topbar-user').textContent = SB_USER.email.split('@')[0];
+    updateOnlineStatus(true);
+    toast('✓ Conectado! Carregando OS...');
+    btn.textContent = 'Entrar'; btn.disabled = false;
+    // Load OS list in background — don't block on errors
+    renderMinhasOS().catch(e => toast('Aviso: ' + e.message));
+    pullFromServer().catch(() => {});
+    goPage('minhasOS');
+  } catch(e) {
+    err.textContent = e.message || 'Erro ao conectar. Verifique URL e Anon Key.';
+    btn.textContent = 'Entrar'; btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  if(!confirm('Deseja sair da sessão?')) return;
+  SB_TOKEN = ''; SB_USER = null;
+  localStorage.removeItem('sb_token');
+  localStorage.removeItem('sb_user');
+  document.getElementById('topbar-user').textContent = 'Offline';
+  updateOnlineStatus(false);
+  toast('Sessão encerrada.');
+}
+
+function updateOnlineStatus(online) {
+  const dot = document.getElementById('online-dot');
+  const lbl = document.getElementById('online-lbl');
+  if(dot) dot.style.background = online ? 'var(--green)' : 'var(--text3)';
+  if(lbl) lbl.textContent = online ? 'Online' : 'Local';
+}
+
+// ── PUSH: local → Supabase ───────────────────────────────────────
+async function pushToServer() {
+  if(!sbConfigured()) { toast('Configure o Supabase primeiro.','err'); openModal('modal-login'); return; }
+  if(!S.os)           { toast('Nenhuma OS carregada.','err'); return; }
+
+  const btn = document.getElementById('sync-btn');
+  if(btn) btn.textContent = '⏳ Enviando...';
+
+  try {
+    const osPayload = {
+      numero:     S.os.numero,
+      cliente:    S.os.cliente,
+      produto:    S.os.produto,
+      prazo:      S.os.prazo || null,
+      peso_total: S.os.pesoTotal || 0,
+      status:     'ativa',
+      dados_json: JSON.stringify({
+        lotes:     S.os.lotes,
+        desenhos:  S.os.desenhos,
+        materiais: S.os.materiais,
+        tarefas:   S.os.tarefas
+      })
+    };
+
+    // Upsert OS (GET then PATCH or POST)
+    const existing = await sbReq('GET',
+      '/rest/v1/ordens?numero=eq.' + encodeURIComponent(S.os.numero) + '&select=id',
+      null, true);
+
+    let osId;
+    if(existing?.length) {
+      osId = existing[0].id;
+      await sbReq('PATCH',
+        '/rest/v1/ordens?numero=eq.' + encodeURIComponent(S.os.numero),
+        osPayload, true);
+    } else {
+      const res = await sbReq('POST', '/rest/v1/ordens', osPayload, true);
+      osId = Array.isArray(res) ? res[0]?.id : res?.id;
+      if(!osId) throw new Error('Falha ao criar OS');
+    }
+
+    // Only push NEW local apontamentos (those without a server ID)
+    // Server IDs are numeric, local temp IDs are timestamps (large numbers) or Date.now()
+    // We identify "local only" by checking which ones are NOT yet in the server
+    const serverApts = await sbReq('GET',
+      '/rest/v1/apontamentos?os_id=eq.' + osId + '&select=id', null, true) || [];
+    const serverIds = new Set(serverApts.map(a => String(a.id)));
+
+    // IDs from server are UUIDs (strings like "abc-123") or integers
+    // Local-only apts either have no id or have id not in server set
+    const newLocalApts = S.apontamentos.filter(a => {
+      if(!a.id) return true;   // no id = definitely local
+      const idStr = String(a.id);
+      if(serverIds.has(idStr)) return false;  // already on server
+      return true;  // not found on server = push it
+    });
+
+    if(newLocalApts.length > 0) {
+      const toInsert = newLocalApts.map(a => ({
+        os_id:       osId,
+        user_email:  a.operadorId || 'gestor',
+        setor:       a.setor,
+        operacao:    a.operacao || null,
+        material:    a.material || null,
+        comprimento: a.comprimento || null,
+        lote_key:    a.loteKey || null,
+        ref:         a.ref || null,
+        qtd:         a.qtd || 0,
+        peso_unit:   a.pesoUnit || 0,
+        peso:        a.peso || 0,
+        turno:       a.turno || null,
+        modo:        a.modo || 'concluido',
+        obs:         a.obs || null,
+        em_aberto:   a.emAberto ? true : false,
+        ts:          a.ts || new Date().toISOString()
+      }));
+      for(let i=0; i<toInsert.length; i+=100) {
+        await sbReq('POST', '/rest/v1/apontamentos', toInsert.slice(i,i+100), true);
+      }
+    }
+
+    // Sync escalas
+    const serverEscs = await sbReq('GET',
+      '/rest/v1/escalas?os_id=eq.' + osId + '&select=id,data,setor', null, true) || [];
+    const newLocalEscs = (S.escalas||[]).filter(e => {
+      return !serverEscs.some(se => se.data===e.data && se.setor===e.setor);
+    });
+    if(newLocalEscs.length) {
+      const escsToInsert = newLocalEscs.map(e => ({
+        os_id: osId, data: e.data, turno: e.turno,
+        horario: e.horario||'', setor: e.setor,
+        qt: e.qt||0, nomes: e.nomes||'', obs: e.obs||''
+      }));
+      await sbReq('POST', '/rest/v1/escalas', escsToInsert, true);
+    }
+
+    // After successful push, do a pull to get all server data (including from tablet)
+    await pullFromServer();
+    toast('✓ Sincronizado!');
+  } catch(e) {
+    toast('Erro ao sincronizar: ' + e.message, 'err');
+  } finally {
+    if(btn) btn.textContent = '☁ Sync';
+  }
+}
+
+
+async function pullFromServer() {
+  if(!sbConfigured()) { openModal('modal-login'); return; }
+  try {
+    // Get latest active OS (or the one currently loaded)
+    const filtro = S.os?.numero
+      ? 'numero=eq.' + encodeURIComponent(S.os.numero)
+      : 'status=eq.ativa&order=criado.desc&limit=1';
+    const ordens = await sbReq('GET',
+      '/rest/v1/ordens?' + filtro + '&select=*', null, true);
+    if(!ordens?.length) { toast('Nenhuma OS encontrada no Supabase.'); return; }
+
+    const os = ordens[0];
+    // dados_json can be string or already-parsed object (Supabase JSONB)
+    const dados = (() => {
+      try {
+        if(!os.dados_json) return {};
+        if(typeof os.dados_json === 'object') return os.dados_json;
+        return JSON.parse(os.dados_json);
+      } catch(e) { return {}; }
+    })();
+
+    // Get apontamentos
+    const apts = await sbReq('GET',
+      '/rest/v1/apontamentos?os_id=eq.' + os.id + '&order=ts.asc', null, true) || [];
+
+    // Get escalas
+    const escs = await sbReq('GET',
+      '/rest/v1/escalas?os_id=eq.' + os.id + '&order=data.desc', null, true) || [];
+
+    // Rebuild local state
+    S.os = {
+      numero:    os.numero,
+      cliente:   os.cliente,
+      produto:   os.produto,
+      prazo:     os.prazo,
+      pesoTotal: os.peso_total,
+      ...dados
+    };
+    S.apontamentos = apts.map(a => ({
+      id:          a.id,
+      ts:          a.ts,
+      setor:       a.setor,
+      operadorId:  a.user_email,
+      tipo:        a.lote_key ? 'lote' : 'desenho',
+      ref:         a.ref,
+      operacao:    a.operacao,
+      material:    a.material,
+      comprimento: a.comprimento,
+      loteKey:     a.lote_key,
+      qtd:         a.qtd,
+      pesoUnit:    a.peso_unit,
+      peso:        a.peso,
+      turno:       a.turno,
+      obs:         a.obs,
+      emAberto:    a.em_aberto,
+      modo:        a.modo
+    }));
+    S.escalas = escs.map(e => ({
+      id: String(e.id), data: e.data, turno: e.turno,
+      horario: e.horario, setor: e.setor,
+      qt: e.qt, nomes: e.nomes, obs: e.obs
+    }));
+
+    saveS(true);
+    updateTopbar();
+    renderPage(currentPage || 'dashboard');
+    updateOnlineStatus(true);
+    toast('✓ Dados atualizados do Supabase!');
+  } catch(e) {
+    toast('Erro ao buscar dados: ' + e.message, 'err');
+    updateOnlineStatus(false);
+  }
+}
+
+async function doPull() {
+  const btn = document.getElementById('pull-btn');
+  if(btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  try {
+    await pullFromServer();
+  } finally {
+    if(btn) { btn.textContent = '↓ Pull'; btn.disabled = false; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SUPABASE REALTIME — atualização em tempo real via WebSocket
+// ══════════════════════════════════════════════════════════════
+
+var _realtimeWS   = null;
+var _realtimeHB   = null;  // heartbeat interval
+var _realtimeRef  = 1;
+var _realtimeInit = false;
+
+function startRealtime() {
+  if(!sbConfigured() || !SB_TOKEN) return;
+  if(_realtimeWS && _realtimeWS.readyState <= 1) return; // already open/connecting
+
+  const wsUrl = SB_URL.replace('https://', 'wss://')
+                       .replace('http://',  'ws://')
+    + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
+
+  try {
+    _realtimeWS = new WebSocket(wsUrl);
+  } catch(e) {
+    console.warn('Realtime WS error:', e);
+    return;
+  }
+
+  _realtimeWS.onopen = function() {
+    console.log('Realtime: conectado');
+    updateOnlineStatus(true);
+
+    // Subscribe to apontamentos table changes
+    _realtimeWS.send(JSON.stringify({
+      topic: 'realtime:*',
+      event: 'phx_join',
+      payload: {
+        config: {
+          broadcast: { self: false },
+          presence:  { key: '' },
+          postgres_changes: [
+            { event: '*', schema: 'public', table: 'apontamentos' },
+            { event: '*', schema: 'public', table: 'ordens' }
+          ]
+        }
+      },
+      ref: String(_realtimeRef++)
+    }));
+
+    // Heartbeat every 30s
+    _realtimeHB = setInterval(function() {
+      if(_realtimeWS && _realtimeWS.readyState === 1) {
+        _realtimeWS.send(JSON.stringify({
+          topic: 'phoenix', event: 'heartbeat', payload: {}, ref: String(_realtimeRef++)
+        }));
+      }
+    }, 30000);
+  };
+
+  _realtimeWS.onmessage = function(evt) {
+    try {
+      const msg = JSON.parse(evt.data);
+      // Ignore heartbeat responses and join confirmations
+      if(msg.event === 'phx_reply' || msg.event === 'heartbeat') return;
+
+      // Data changed — pull fresh data
+      if(msg.event === 'postgres_changes' || msg.payload?.data?.type) {
+        console.log('Realtime: mudança detectada', msg.payload?.data?.type);
+        if(S.os && sbConfigured()) {
+          pullFromServer().catch(function() {});
+          // Visual indicator
+          const dot = document.getElementById('online-dot');
+          if(dot) {
+            dot.style.background = 'var(--yellow)';
+            setTimeout(function() { dot.style.background = 'var(--green)'; }, 800);
+          }
+        }
+      }
+    } catch(e) {}
+  };
+
+  _realtimeWS.onerror = function(e) {
+    console.warn('Realtime error:', e);
+  };
+
+  _realtimeWS.onclose = function() {
+    console.log('Realtime: desconectado — reconectando em 5s');
+    clearInterval(_realtimeHB);
+    _realtimeWS = null;
+    // Pull missed data during disconnection
+    if(sbConfigured() && SB_TOKEN && S.os) {
+      pullFromServer().catch(function(){});
+    }
+    // Reconnect after 5s
+    setTimeout(function() {
+      if(sbConfigured() && SB_TOKEN) startRealtime();
+    }, 5000);
+  };
+}
+
+function stopRealtime() {
+  if(_realtimeHB) { clearInterval(_realtimeHB); _realtimeHB = null; }
+  if(_realtimeWS) { _realtimeWS.close(); _realtimeWS = null; }
+}
+
+// Fallback: pull every 30s if realtime disconnected
+setInterval(function() {
+  if(sbConfigured() && SB_TOKEN && S.os) {
+    if(!_realtimeWS || _realtimeWS.readyState > 1) {
+      pullFromServer().catch(function() {});
+    }
+  }
+}, 30000);
+
+// ── Init ─────────────────────────────────────────────────────────
+(async () => {
+  if(SB_URL && SB_KEY && SB_TOKEN) {
+    try {
+      await sbReq('GET', '/rest/v1/ordens?limit=1', null, true);
+      updateOnlineStatus(true);
+      const nome = SB_USER?.email?.split('@')[0] || 'Online';
+      document.getElementById('topbar-user').textContent = nome;
+      toast('✓ Sessão restaurada — ' + nome);
+      startRealtime();
+      renderMinhasOS().catch(()=>{});
+      pullFromServer().catch(()=>{});
+    } catch {
+      // Token expired — clear and show login
+      updateOnlineStatus(false);
+      SB_TOKEN = '';
+      localStorage.removeItem('sb_token');
+      toast('Sessão expirada. Faça login novamente.');
+      setTimeout(() => openModal('modal-login'), 800);
+    }
+  } else {
+    updateOnlineStatus(false);
+    // Auto-open login if never configured
+    if(!SB_URL || !SB_KEY) {
+      setTimeout(() => openModal('modal-login'), 500);
+    }
+  }
+})();
+
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('NODUS CALD SW registrado'))
+      .catch(e => console.log('SW erro:', e));
+  });
+}
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if(btn) btn.style.display = '';
+});
+function installPWA() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  }
+}
+</script>
+
+
+<!-- Sidebar overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn" onclick="mobileNav('minhasOS')">
+    <span class="nav-icon">📋</span>OS
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('dashboard')">
+    <span class="nav-icon">📊</span>Dashboard
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('preparativo')">
+    <span class="nav-icon">⚙</span>Prep
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('montagem')">
+    <span class="nav-icon">🔧</span>Mont
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('solda')">
+    <span class="nav-icon">🔥</span>Solda
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('acabamento')">
+    <span class="nav-icon">✨</span>Acab
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('cronograma')">
+    <span class="nav-icon">📅</span>Gantt
+  </button>
+  <button class="mobile-nav-btn" onclick="mobileNav('equipe')">
+    <span class="nav-icon">👷</span>Equipe
+  </button>
+</nav>
+</body>
+</html>
