@@ -316,6 +316,12 @@ body{background:var(--bg);color:var(--text);font-family:"Barlow",sans-serif;
       <div class="conc-badge" id="conc-badge">CONCLUÍDO</div>
     </div>
     <div class="field">
+      <label class="lbl">Executado por <span style="color:var(--red)">*</span></label>
+      <select class="inp" id="apt-operador-prep">
+        <option value="">— Selecione o operador —</option>
+      </select>
+    </div>
+    <div class="field">
       <label class="lbl">Observação</label>
       <input class="inp" id="apt-obs" placeholder="Opcional">
     </div>
@@ -336,6 +342,12 @@ body{background:var(--bg);color:var(--text);font-family:"Barlow",sans-serif;
     </div>
     <div class="info-card" id="apt-des-info" style="display:none;">
       <div id="apt-des-txt" style="font-size:13px;color:var(--text2);"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">Executado por <span style="color:var(--red)">*</span></label>
+      <select class="inp" id="apt-operador-setor">
+        <option value="">— Selecione o operador —</option>
+      </select>
     </div>
     <div class="field">
       <label class="lbl">Observação</label>
@@ -364,6 +376,7 @@ var SB_USER  = null;
 try { SB_USER = JSON.parse(localStorage.getItem('sb_user') || 'null'); } catch(e) {}
 
 var OS_LIST     = [];
+var OPERADORES  = [];
 var OS_ATUAL    = null;
 var LOTES       = [];
 var DESENHOS    = {};
@@ -577,6 +590,7 @@ function doLogin() {
     startRealtime();
     setTimeout(flushQueue, 2000);
     loadOS();
+    loadOperadores();
   })
   .catch(function(e) {
     if (err) err.textContent = e.message || 'Erro de conexão';
@@ -614,6 +628,36 @@ function loadOS() {
     setOnline(false);
     setRTStatus('offline', 'Sem conexão');
   });
+}
+
+// ── Operadores ────────────────────────────────────────────────
+function loadOperadores() {
+  sbReq('GET', '/rest/v1/operadores?ativo=eq.true&order=nome.asc&select=id,nome,setor,turno')
+  .then(function(ops) {
+    OPERADORES = ops || [];
+    fillOperadorSelects();
+  })
+  .catch(function() {
+    // fallback: tenta localStorage legado do supervisor
+    try {
+      var s = JSON.parse(localStorage.getItem('pt2') || '{}');
+      OPERADORES = (s.operadores || []).map(function(o) {
+        return { id: o.id, nome: o.nome, setor: o.setor, turno: o.turno };
+      });
+      fillOperadorSelects();
+    } catch(e) {}
+  });
+}
+
+function fillOperadorSelects() {
+  var opts = '<option value="">— Selecione o operador —</option>';
+  OPERADORES.forEach(function(o) {
+    opts += '<option value="' + o.nome + '">' + o.nome + (o.turno ? ' (' + o.turno + ')' : '') + '</option>';
+  });
+  var prepEl  = document.getElementById('apt-operador-prep');
+  var setorEl = document.getElementById('apt-operador-setor');
+  if (prepEl)  prepEl.innerHTML  = opts;
+  if (setorEl) setorEl.innerHTML = opts;
 }
 
 function renderChips() {
@@ -1108,7 +1152,10 @@ function savePrep() {
   var lote  = LOTES[idx];
   var op    = opEl  ? opEl.value  : '';
   var obs   = obsEl ? obsEl.value : '';
+  var opNomeEl = document.getElementById('apt-operador-prep');
+  var opNome   = opNomeEl ? opNomeEl.value : '';
   if (!lote || !op) { toast('Selecione lote e operação', 'err'); return; }
+  if (!opNome) { toast('Selecione o operador', 'err'); return; }
 
   var key    = lote.material + '||' + lote.comprimento;
   var jaProd = qtdProdOp(key, op);
@@ -1125,6 +1172,7 @@ function savePrep() {
 
   var apt = {
     os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
+    operador_nome: opNome,
     setor: 'Preparativo', operacao: op, material: lote.material,
     comprimento: lote.comprimento, lote_key: key, ref: ref, qtd: qtd,
     peso_unit: lote.pesoUnit, peso: peso, turno: getTurno(), obs: obs,
@@ -1153,10 +1201,14 @@ function saveSetor() {
   var obsEl  = document.getElementById('apt-setor-obs');
   var cod    = desEl ? desEl.value : '';
   var obs    = obsEl ? obsEl.value : '';
+  var opNomeSetorEl = document.getElementById('apt-operador-setor');
+  var opNomeSetor   = opNomeSetorEl ? opNomeSetorEl.value : '';
   if (!cod) { toast('Selecione um desenho', 'err'); return; }
+  if (!opNomeSetor) { toast('Selecione o operador', 'err'); return; }
   var d = DESENHOS[cod] || {};
   var apt = {
     os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
+    operador_nome: opNomeSetor,
     setor: setor, ref: cod, qtd: 1, peso_unit: 0,
     peso: d.pesoTotal || 0, turno: getTurno(), obs: obs,
     em_aberto: false, modo: 'concluido', ts: new Date().toISOString()
@@ -1343,6 +1395,7 @@ window.addEventListener('load', function() {
       startRealtime();
       setTimeout(flushQueue, 2000);
       loadOS();
+      loadOperadores();
     })
     .catch(function() {
       SB_TOKEN = '';
