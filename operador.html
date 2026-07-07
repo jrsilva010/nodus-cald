@@ -485,16 +485,22 @@ function sbReq(method, path, body) {
   if (body) opts.body = JSON.stringify(body);
   return fetch(SB_URL + path, opts).then(function(r) {
     if (r.status === 401) {
-      // Sessão expirada — mostrar re-login
       showReLogin();
       throw new Error('session_expired');
     }
     if (!r.ok) {
-      return r.json().then(function(e) {
-        throw new Error(e.message || e.error || r.statusText);
-      }).catch(function(ex) {
-        if (ex.message === 'session_expired') throw ex;
-        throw new Error(r.statusText);
+      return r.text().then(function(txt) {
+        var msg = txt;
+        try {
+          var j = JSON.parse(txt);
+          msg = j.message || j.error || j.hint || txt;
+          // coluna não existe no banco
+          if (msg && msg.indexOf('column') > -1 && msg.indexOf('does not exist') > -1) {
+            msg = 'Coluna ausente no banco. Execute o SQL de atualização no Supabase.';
+          }
+        } catch(e) {}
+        console.error('[sbReq] ' + method + ' ' + path + ' → ' + r.status + ': ' + msg);
+        throw new Error(msg);
       });
     }
     var ct = r.headers.get('content-type') || '';
@@ -1155,7 +1161,7 @@ function savePrep() {
   var opNomeEl = document.getElementById('apt-operador-prep');
   var opNome   = opNomeEl ? opNomeEl.value : '';
   if (!lote || !op) { toast('Selecione lote e operação', 'err'); return; }
-  if (!opNome) { toast('Selecione o operador', 'err'); return; }
+  if (OPERADORES.length > 0 && !opNome) { toast('Selecione o operador', 'err'); return; }
 
   var key    = lote.material + '||' + lote.comprimento;
   var jaProd = qtdProdOp(key, op);
@@ -1191,7 +1197,17 @@ function savePrep() {
     renderSetores();
   })
   .catch(function(e) {
-    if (e.message !== 'session_expired') { addToQueue(apt); closeModal('modal-prep'); renderApt('Preparativo'); renderSetores(); }
+    if (e.message === 'session_expired') return;
+    // Se for erro de coluna ausente, avisa mas não salva na fila
+    if (e.message && e.message.indexOf('Coluna ausente') > -1) {
+      toast('Erro: ' + e.message, 'err');
+      return;
+    }
+    toast('Sem conexão — salvo localmente', 'warn');
+    addToQueue(apt);
+    closeModal('modal-prep');
+    renderApt('Preparativo');
+    renderSetores();
   });
 }
 
@@ -1204,7 +1220,7 @@ function saveSetor() {
   var opNomeSetorEl = document.getElementById('apt-operador-setor');
   var opNomeSetor   = opNomeSetorEl ? opNomeSetorEl.value : '';
   if (!cod) { toast('Selecione um desenho', 'err'); return; }
-  if (!opNomeSetor) { toast('Selecione o operador', 'err'); return; }
+  if (OPERADORES.length > 0 && !opNomeSetor) { toast('Selecione o operador', 'err'); return; }
   var d = DESENHOS[cod] || {};
   var apt = {
     os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
@@ -1224,7 +1240,16 @@ function saveSetor() {
     renderSetores();
   })
   .catch(function(e) {
-    if (e.message !== 'session_expired') { addToQueue(apt); closeModal('modal-setor'); renderApt(setor); renderSetores(); }
+    if (e.message === 'session_expired') return;
+    if (e.message && e.message.indexOf('Coluna ausente') > -1) {
+      toast('Erro: ' + e.message, 'err');
+      return;
+    }
+    toast('Sem conexão — salvo localmente', 'warn');
+    addToQueue(apt);
+    closeModal('modal-setor');
+    renderApt(setor);
+    renderSetores();
   });
 }
 
