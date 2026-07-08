@@ -467,7 +467,7 @@ td{padding:9px 13px;font-size:13px}
         <div class="ig"><label>Produto / Descrição</label><input class="inp" id="os-prod" placeholder="Descrição"></div>
         <div class="ig"><label>Prazo de Entrega</label><input class="inp" type="date" id="os-prazo"></div>
       </div>
-      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-inp').click()">
+      <div class="upload-zone" id="drop-zone">
         <input type="file" id="file-inp" accept=".xlsx,.xls,.pdf" style="display:none" onchange="handleFile(this)">
         <div class="upload-icon">📂</div>
         <div class="upload-title">Arraste o Plano de Corte aqui</div>
@@ -1218,12 +1218,12 @@ function switchTab(tabEl) {
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   const dz = document.getElementById('drop-zone');
+  dz.addEventListener('click', () => document.getElementById('file-inp').click());
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
   dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; });
   dz.addEventListener('drop', e => {
     e.preventDefault(); dz.style.borderColor = '';
-    const f = e.dataTransfer.files[0];
-    if(f) { if(f.name.toLowerCase().endsWith('.pdf')) processPDF(f); else processFile(f); }
+    if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
   });
   updateTopbar();
   if(S.os) renderDash();
@@ -1236,7 +1236,7 @@ function handleFile(inp) {
   else processFile(file);
 }
 
-// === PDF PARSER ===================================================
+// ─── PDF PARSER ────────────────────────────────────────────────
 async function processPDF(file) {
   const dz = document.getElementById('drop-zone');
   dz.innerHTML = '<div style="color:var(--accent);font-size:13px;padding:20px">⏳ Lendo PDF...</div>';
@@ -1342,7 +1342,7 @@ async function processPDF(file) {
     toast('Erro ao ler PDF: ' + err.message, 'err');
   }
 }
-// ===================================================================
+// ───────────────────────────────────────────────────────────────
 
 function processFile(file) {
   const reader = new FileReader();
@@ -2668,7 +2668,7 @@ function novaOS() {
     dz.innerHTML = '<input type="file" id="file-inp" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this)">'
       + '<div class="upload-icon">📂</div>'
       + '<div class="upload-title">Arraste o Plano de Corte aqui</div>'
-      + '<div class="upload-sub">Clique para selecionar · .xlsx ou .pdf</div>';
+      + '<div class="upload-sub">Clique para selecionar · Formato .xlsx</div>';
     dz.onclick = function() { var fi = document.getElementById('file-inp'); if(fi) fi.click(); };
   }
   goPage('os');
@@ -3705,7 +3705,7 @@ function resetOS() {
   if(!confirm('Apagar OS e todos os apontamentos?')) return;
   S.os=null; S.apontamentos=[]; S.escalas=[]; parsedXLSX=null; saveS(true);
   const dz=document.getElementById('drop-zone');
-  dz.innerHTML='<div class="upload-icon">📂</div><div class="upload-title">Arraste o Plano de Corte aqui</div><div class="upload-sub">Clique para selecionar · .xlsx ou .pdf (modelo OS 1608)</div>';
+  dz.innerHTML='<div class="upload-icon">📂</div><div class="upload-title">Arraste o Plano de Corte aqui</div><div class="upload-sub">Clique para selecionar · Formato .xlsx (modelo OS 1608)</div>';
   document.getElementById('os-form-area').style.display=''; document.getElementById('os-loaded').style.display='none';
   updateTopbar(); toast('OS removida.');
 }
