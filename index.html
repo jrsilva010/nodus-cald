@@ -1236,7 +1236,7 @@ function handleFile(inp) {
   else processFile(file);
 }
 
-// ─── PDF PARSER ────────────────────────────────────────────────
+// === PDF PARSER ===================================================
 async function processPDF(file) {
   const dz = document.getElementById('drop-zone');
   dz.innerHTML = '<div style="color:var(--accent);font-size:13px;padding:20px">⏳ Lendo PDF...</div>';
@@ -1342,7 +1342,7 @@ async function processPDF(file) {
     toast('Erro ao ler PDF: ' + err.message, 'err');
   }
 }
-// ───────────────────────────────────────────────────────────────
+// ===================================================================
 
 function processFile(file) {
   const reader = new FileReader();
