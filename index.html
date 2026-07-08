@@ -14,6 +14,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23f97316'/><text y='.9em' font-size='55' x='10' font-weight='bold' fill='white'>NC</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--panel:#1e2230;--border:#2a2f3f;--border2:#353c50;--accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--purple:#a855f7;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--prep:#3b82f6;--mont:#22c55e;--sold:#f97316;--acab:#a855f7}
@@ -466,10 +468,10 @@ td{padding:9px 13px;font-size:13px}
         <div class="ig"><label>Prazo de Entrega</label><input class="inp" type="date" id="os-prazo"></div>
       </div>
       <div class="upload-zone" id="drop-zone">
-        <input type="file" id="file-inp" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this)">
+        <input type="file" id="file-inp" accept=".xlsx,.xls,.pdf" style="display:none" onchange="handleFile(this)">
         <div class="upload-icon">📂</div>
         <div class="upload-title">Arraste o Plano de Corte aqui</div>
-        <div class="upload-sub">Clique para selecionar · Formato .xlsx (modelo OS 1608)</div>
+        <div class="upload-sub">Clique para selecionar · Formatos .xlsx ou .pdf</div>
       </div>
       <div class="sh"><h2>Configuração da OS</h2><div class="sh-line"></div></div>
       
@@ -1227,7 +1229,120 @@ document.addEventListener('DOMContentLoaded', () => {
   if(S.os) renderDash();
 });
 
-function handleFile(inp) { if(inp.files[0]) processFile(inp.files[0]); }
+function handleFile(inp) {
+  if (!inp.files[0]) return;
+  const file = inp.files[0];
+  if (file.name.toLowerCase().endsWith('.pdf')) processPDF(file);
+  else processFile(file);
+}
+
+// ─── PDF PARSER ────────────────────────────────────────────────
+async function processPDF(file) {
+  const dz = document.getElementById('drop-zone');
+  dz.innerHTML = '<div style="color:var(--accent);font-size:13px;padding:20px">⏳ Lendo PDF...</div>';
+
+  try {
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js não carregado. Verifique sua conexão.');
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let fullText = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page    = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      // Ordenar por Y (linha) depois X (coluna) para manter layout tabular
+      const items = content.items.slice().sort((a, b) => {
+        const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+        return dy !== 0 ? dy : a.transform[4] - b.transform[4];
+      });
+      // Agrupar em linhas por Y próximo (tolerância 3px)
+      const lines = [];
+      let curY = null, curLine = [];
+      items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        if (curY === null || Math.abs(y - curY) > 3) {
+          if (curLine.length) lines.push(curLine.map(i => i.str).join('  '));
+          curLine = [item]; curY = y;
+        } else { curLine.push(item); }
+      });
+      if (curLine.length) lines.push(curLine.map(i => i.str).join('  '));
+      fullText += lines.join('
+') + '
+';
+    }
+
+    // Regex para capturar linhas da tabela:
+    // DESENHO  COMPRIMENTO  QTE  MATERIAL  kg/m  PESO_NOMINAL  PESO_TOTAL
+    const pattern = /([A-Z]{2,}[\w\s\.\-]+?)\s{2,}(\d+)\s{2,}(\d+)\s{2,}(.+?)\s{2,}kg\s*[\/\]\s*m\s+([\d,]+)\s+([\d,]+)/g;
+
+    const rows = [];
+    let m;
+    while ((m = pattern.exec(fullText)) !== null) {
+      const desenho = m[1].trim();
+      const comp    = parseInt(m[2]);
+      const qtd     = parseInt(m[3]);
+      const mat     = m[4].trim();
+      const pesN    = parseFloat(m[5].replace(',', '.'));
+      const pesT    = parseFloat(m[6].replace(',', '.'));
+      if (!desenho || !mat || comp <= 0 || qtd <= 0) continue;
+      rows.push({ desenho, comprimento: comp, qtd, material: mat, pesoUnit: pesN, pesoTotal: pesT });
+    }
+
+    if (!rows.length) throw new Error('Nenhum dado encontrado no PDF. Verifique o formato do plano.');
+
+    // Construir lotes, des, mats — mesma estrutura do parser Excel
+    const mats = {}, des = {}, lotesMap = {};
+    rows.forEach(r => {
+      const { desenho, comprimento, qtd, material, pesoUnit, pesoTotal } = r;
+      // mats
+      if (!mats[material]) mats[material] = { itens: [], pesoTotal: 0, qtdTotal: 0 };
+      mats[material].itens.push({ desc: desenho, comp: comprimento, qtd, pesT: pesoTotal });
+      mats[material].pesoTotal += pesoTotal;
+      mats[material].qtdTotal  += qtd;
+      // des
+      if (!des[desenho]) des[desenho] = { itens: [], pesoTotal: 0 };
+      des[desenho].itens.push({ mat: material, comp: comprimento, qtd, pesN: pesoUnit, pesT: pesoTotal });
+      des[desenho].pesoTotal += pesoTotal;
+      // lotes
+      const key = material + '||' + comprimento;
+      if (!lotesMap[key]) {
+        const pesM = pesoUnit > 0 ? Math.round(pesoUnit * comprimento / 1000 * 10000) / 10000 : 0;
+        const mU   = material.toUpperCase();
+        let ops = [];
+        if      (/^(CT |CA )/.test(mU))             ops = ['Cortar comprimento','Traçagem','Corte furo'];
+        else if (/^(TD |TB )/.test(mU))             ops = ['Corte','Dobra'];
+        else if (/^BC /.test(mU))                   ops = ['Traçagem','Corte'];
+        else if (/^(CH |PL |CHAPA|PLACA)/.test(mU)) ops = ['Corte CNC','Dobra/Conformação'];
+        else                                         ops = ['Corte'];
+        lotesMap[key] = { material, comprimento, qtdTotal: 0, pesoTotal: 0,
+                          pesoUnit: pesM, pesoNomKgm: pesoUnit,
+                          ops, isChapasCNC: false, desenhos: new Set() };
+      }
+      lotesMap[key].qtdTotal  += qtd;
+      lotesMap[key].pesoTotal += pesoTotal;
+      lotesMap[key].desenhos.add(desenho);
+    });
+
+    const lotes = Object.values(lotesMap).map(l => ({
+      ...l,
+      desenhos: [...l.desenhos].sort(),
+      pesoUnit: l.pesoUnit > 0 ? l.pesoUnit : (l.qtdTotal > 0 ? Math.round(l.pesoTotal / l.qtdTotal * 10000) / 10000 : 0)
+    })).sort((a, b) => a.material.localeCompare(b.material) || a.comprimento - b.comprimento);
+
+    parsedXLSX = { mats, des, lotes };
+    const totalKg = Object.values(des).reduce((s, d) => s + d.pesoTotal, 0);
+    dz.innerHTML = `<div style="color:var(--green);font-size:36px">✓</div>
+      <div class="upload-title" style="color:var(--green)">${file.name}</div>
+      <div class="upload-sub">${Object.keys(des).length} desenhos · ${lotes.length} lotes · ${totalKg.toFixed(1)} kg</div>`;
+    toast('✓ PDF lido! ' + Object.keys(des).length + ' desenhos · ' + lotes.length + ' lotes');
+
+  } catch (err) {
+    dz.innerHTML = '<div style="color:var(--red);font-size:13px;padding:20px">❌ ' + err.message + '</div>';
+    toast('Erro ao ler PDF: ' + err.message, 'err');
+  }
+}
+// ───────────────────────────────────────────────────────────────
 
 function processFile(file) {
   const reader = new FileReader();
