@@ -1272,7 +1272,7 @@ async function processPDF(file) {
 
     // Regex para capturar linhas da tabela:
     // DESENHO  COMPRIMENTO  QTE  MATERIAL  kg/m  PESO_NOMINAL  PESO_TOTAL
-    const pattern = /([A-Z]{2,}[\w\s\.\-]+?)\s{2,}(\d+)\s{2,}(\d+)\s{2,}(.+?)\s{2,}kg\s*[\/\]\s*m\s+([\d,]+)\s+([\d,]+)/g;
+    const pattern = /([A-Z]{2,}[\w\s\.\-]+?)\s{2,}(\d+)\s{2,}(\d+)\s{2,}(.+?)\s{2,}kg\s*[\/\\]\s*m\s+([\d,]+)\s+([\d,]+)/g;
 
     const rows = [];
     let m;
