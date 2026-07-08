@@ -1242,80 +1242,109 @@ async function processPDF(file) {
   dz.innerHTML = '<div style="color:var(--accent);font-size:13px;padding:20px">⏳ Lendo PDF...</div>';
 
   try {
-    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js não carregado. Verifique sua conexão.');
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js não carregado.');
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-    let fullText = '';
+    const allRows = [];
+
     for (let p = 1; p <= pdf.numPages; p++) {
       const page    = await pdf.getPage(p);
       const content = await page.getTextContent();
-      // Ordenar por Y (linha) depois X (coluna) para manter layout tabular
-      const items = content.items.slice().sort((a, b) => {
-        const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
-        return dy !== 0 ? dy : a.transform[4] - b.transform[4];
+
+      // Agrupar itens por linha Y (tolerância 4px)
+      const byY = {};
+      content.items.forEach(item => {
+        const y = Math.round(item.transform[5] / 4) * 4;
+        if (!byY[y]) byY[y] = [];
+        byY[y].push({ x: item.transform[4], str: item.str.trim() });
       });
-      // Agrupar em linhas por Y próximo (tolerância 3px)
-      const lines = [];
-      let curY = null, curLine = [];
-      items.forEach(item => {
-        const y = Math.round(item.transform[5]);
-        if (curY === null || Math.abs(y - curY) > 3) {
-          if (curLine.length) lines.push(curLine.map(i => i.str).join('  '));
-          curLine = [item]; curY = y;
-        } else { curLine.push(item); }
-      });
-      if (curLine.length) lines.push(curLine.map(i => i.str).join('  '));
-      fullText += lines.join('\n') + '\n';
+
+      // Ordenar linhas de cima para baixo (Y decrescente em PDF)
+      const sortedYs = Object.keys(byY).map(Number).sort((a,b) => b - a);
+
+      for (const y of sortedYs) {
+        // Ordenar tokens da linha por X (esquerda para direita)
+        const tokens = byY[y].sort((a,b) => a.x - b.x).map(t => t.str).filter(s => s.length > 0);
+        const line   = tokens.join(' ');
+
+        // Padrão: deve conter "kg / m" ou "kg/m"
+        if (!/kg\s*\/\s*m/i.test(line)) continue;
+
+        // Tentar extrair os campos
+        // Linha típica: "TIB-1.2.1 - 4319 93 2 BR 1/2" sae 1020 kg / m 1,01 4,90"
+        // Estratégia: pegar número antes de "kg", dividir o restante
+        const kgIdx = line.search(/kg\s*\/\s*m/i);
+        if (kgIdx < 0) continue;
+
+        const before = line.substring(0, kgIdx).trim();
+        const after  = line.substring(kgIdx).replace(/kg\s*\/\s*m/i, '').trim();
+
+        // Extrair peso_nominal e peso_total do "after"
+        const nums = after.match(/([\d]+[,.][\d]+)/g);
+        if (!nums || nums.length < 1) continue;
+        const pesoT = parseFloat((nums[nums.length - 1] || '0').replace(',', '.'));
+        const pesoN = parseFloat((nums[0] || '0').replace(',', '.'));
+        if (pesoT <= 0) continue;
+
+        // Extrair do "before": desenho, comprimento, qtd, material
+        // Tokens numéricos inteiros no before = comprimento e qtd
+        const beforeTokens = before.split(/\s+/);
+        // Encontrar os dois últimos números inteiros antes do material
+        const intNums = [];
+        const intIdx  = [];
+        for (let i = 0; i < beforeTokens.length; i++) {
+          if (/^\d+$/.test(beforeTokens[i])) {
+            intNums.push(parseInt(beforeTokens[i]));
+            intIdx.push(i);
+          }
+        }
+        if (intNums.length < 2) continue;
+
+        // Os últimos dois inteiros são comprimento e qtd
+        const qtdIdx  = intIdx[intIdx.length - 1];
+        const compIdx = intIdx[intIdx.length - 2];
+        const qtd     = intNums[intNums.length - 1];
+        const comp    = intNums[intNums.length - 2];
+
+        // Desenho = tokens antes do comprimento
+        const desenho  = beforeTokens.slice(0, compIdx).join(' ').trim();
+        // Material = tokens depois da qtd
+        const material = beforeTokens.slice(qtdIdx + 1).join(' ').trim();
+
+        if (!desenho || !material || comp <= 0 || qtd <= 0) continue;
+        // Filtrar linhas de cabeçalho
+        if (desenho.toUpperCase().includes('SUBDESENHO') || desenho.toUpperCase().includes('POSIÇÃO')) continue;
+
+        allRows.push({ desenho, comprimento: comp, qtd, material, pesoUnit: pesoN, pesoTotal: pesoT });
+      }
     }
 
-    // Regex para capturar linhas da tabela:
-    // DESENHO  COMPRIMENTO  QTE  MATERIAL  kg/m  PESO_NOMINAL  PESO_TOTAL
-    const pattern = /([A-Z]{2,}[\w\s\.\-]+?)\s{2,}(\d+)\s{2,}(\d+)\s{2,}(.+?)\s{2,}kg\s*[\/\\]\s*m\s+([\d,]+)\s+([\d,]+)/g;
+    if (!allRows.length) throw new Error('Nenhum dado encontrado. Verifique o formato do PDF.');
 
-    const rows = [];
-    let m;
-    while ((m = pattern.exec(fullText)) !== null) {
-      const desenho = m[1].trim();
-      const comp    = parseInt(m[2]);
-      const qtd     = parseInt(m[3]);
-      const mat     = m[4].trim();
-      const pesN    = parseFloat(m[5].replace(',', '.'));
-      const pesT    = parseFloat(m[6].replace(',', '.'));
-      if (!desenho || !mat || comp <= 0 || qtd <= 0) continue;
-      rows.push({ desenho, comprimento: comp, qtd, material: mat, pesoUnit: pesN, pesoTotal: pesT });
-    }
-
-    if (!rows.length) throw new Error('Nenhum dado encontrado no PDF. Verifique o formato do plano.');
-
-    // Construir lotes, des, mats — mesma estrutura do parser Excel
+    // Construir lotes, des, mats
     const mats = {}, des = {}, lotesMap = {};
-    rows.forEach(r => {
+    allRows.forEach(r => {
       const { desenho, comprimento, qtd, material, pesoUnit, pesoTotal } = r;
-      // mats
-      if (!mats[material]) mats[material] = { itens: [], pesoTotal: 0, qtdTotal: 0 };
-      mats[material].itens.push({ desc: desenho, comp: comprimento, qtd, pesT: pesoTotal });
-      mats[material].pesoTotal += pesoTotal;
-      mats[material].qtdTotal  += qtd;
-      // des
-      if (!des[desenho]) des[desenho] = { itens: [], pesoTotal: 0 };
-      des[desenho].itens.push({ mat: material, comp: comprimento, qtd, pesN: pesoUnit, pesT: pesoTotal });
+      if (!mats[material]) mats[material] = { itens:[], pesoTotal:0, qtdTotal:0 };
+      mats[material].itens.push({ desc:desenho, comp:comprimento, qtd, pesT:pesoTotal });
+      mats[material].pesoTotal += pesoTotal; mats[material].qtdTotal += qtd;
+      if (!des[desenho]) des[desenho] = { itens:[], pesoTotal:0 };
+      des[desenho].itens.push({ mat:material, comp:comprimento, qtd, pesN:pesoUnit, pesT:pesoTotal });
       des[desenho].pesoTotal += pesoTotal;
-      // lotes
       const key = material + '||' + comprimento;
       if (!lotesMap[key]) {
-        const pesM = pesoUnit > 0 ? Math.round(pesoUnit * comprimento / 1000 * 10000) / 10000 : 0;
-        const mU   = material.toUpperCase();
+        const pesM = pesoUnit > 0 ? Math.round(pesoUnit * comprimento / 1000 * 10000)/10000 : 0;
+        const mU = material.toUpperCase();
         let ops = [];
-        if      (/^(CT |CA )/.test(mU))             ops = ['Cortar comprimento','Traçagem','Corte furo'];
-        else if (/^(TD |TB )/.test(mU))             ops = ['Corte','Dobra'];
-        else if (/^BC /.test(mU))                   ops = ['Traçagem','Corte'];
+        if      (/^(CT |CA )/.test(mU))              ops = ['Cortar comprimento','Traçagem','Corte furo'];
+        else if (/^(TD |TB )/.test(mU))              ops = ['Corte','Dobra'];
+        else if (/^BC /.test(mU))                    ops = ['Traçagem','Corte'];
         else if (/^(CH |PL |CHAPA|PLACA)/.test(mU)) ops = ['Corte CNC','Dobra/Conformação'];
-        else                                         ops = ['Corte'];
-        lotesMap[key] = { material, comprimento, qtdTotal: 0, pesoTotal: 0,
-                          pesoUnit: pesM, pesoNomKgm: pesoUnit,
-                          ops, isChapasCNC: false, desenhos: new Set() };
+        else                                          ops = ['Corte'];
+        lotesMap[key] = { material, comprimento, qtdTotal:0, pesoTotal:0,
+                          pesoUnit:pesM, pesoNomKgm:pesoUnit, ops, isChapasCNC:false, desenhos:new Set() };
       }
       lotesMap[key].qtdTotal  += qtd;
       lotesMap[key].pesoTotal += pesoTotal;
@@ -1323,20 +1352,19 @@ async function processPDF(file) {
     });
 
     const lotes = Object.values(lotesMap).map(l => ({
-      ...l,
-      desenhos: [...l.desenhos].sort(),
-      pesoUnit: l.pesoUnit > 0 ? l.pesoUnit : (l.qtdTotal > 0 ? Math.round(l.pesoTotal / l.qtdTotal * 10000) / 10000 : 0)
-    })).sort((a, b) => a.material.localeCompare(b.material) || a.comprimento - b.comprimento);
+      ...l, desenhos:[...l.desenhos].sort(),
+      pesoUnit: l.pesoUnit > 0 ? l.pesoUnit : (l.qtdTotal > 0 ? Math.round(l.pesoTotal/l.qtdTotal*10000)/10000 : 0)
+    })).sort((a,b) => a.material.localeCompare(b.material) || a.comprimento - b.comprimento);
 
     parsedXLSX = { mats, des, lotes };
-    const totalKg = Object.values(des).reduce((s, d) => s + d.pesoTotal, 0);
-    dz.innerHTML = `<div style="color:var(--green);font-size:36px">✓</div>
+    const totalKg = Object.values(des).reduce((s,d)=>s+d.pesoTotal,0);
+    dz.innerHTML = `<div style="color:var(--green);font-size:36px">&#10003;</div>
       <div class="upload-title" style="color:var(--green)">${file.name}</div>
-      <div class="upload-sub">${Object.keys(des).length} desenhos · ${lotes.length} lotes · ${totalKg.toFixed(1)} kg</div>`;
-    toast('✓ PDF lido! ' + Object.keys(des).length + ' desenhos · ' + lotes.length + ' lotes');
+      <div class="upload-sub">${Object.keys(des).length} desenhos &middot; ${lotes.length} lotes &middot; ${totalKg.toFixed(1)} kg</div>`;
+    toast('PDF lido! ' + Object.keys(des).length + ' desenhos, ' + totalKg.toFixed(1) + ' kg');
 
-  } catch (err) {
-    dz.innerHTML = '<div style="color:var(--red);font-size:13px;padding:20px">❌ ' + err.message + '</div>';
+  } catch(err) {
+    dz.innerHTML = '<div style="color:var(--red);font-size:13px;padding:20px">Erro: ' + err.message + '</div>';
     toast('Erro ao ler PDF: ' + err.message, 'err');
   }
 }
