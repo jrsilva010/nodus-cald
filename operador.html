@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NODUS CALD - Operador</title>
+<meta name="theme-color" content="#f97316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="screen-orientation" content="portrait">
+<meta name="full-screen" content="yes">
+<meta name="browsermode" content="application">
+<meta name="x5-fullscreen" content="true">
+<meta name="x5-page-mode" content="app">
+<meta name="360-fullscreen" content="true">
+<link rel="manifest" href="/manifest-op.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e2a;--panel:#1e2230;--border:#2a2f3f;
+  --accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --prep:#3b82f6;--mont:#22c55e;--sold:#f97316;--acab:#a855f7;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{height:100%;width:100%;background:#0d0f14;}
+body{background:var(--bg);color:var(--text);font-family:"Barlow",sans-serif;
+  min-height:100vh;min-height:100dvh;overscroll-behavior:none;overflow-x:hidden;}
+#app{min-height:100dvh;}
+#login-screen{min-height:100dvh;}
+
+/* Realtime indicator pulse */
+@keyframes pulse-green {
+  0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6);}
+  50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}
+}
+@keyframes pulse-red {
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6);}
+  50%{box-shadow:0 0 0 5px rgba(239,68,68,0);}
+}
+.online-dot{width:10px;height:10px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s;}
+.online-dot.live{background:var(--green);animation:pulse-green 2s infinite;}
+.online-dot.offline{background:var(--red);animation:pulse-red 2s infinite;}
+
+/* Layout */
+@media(min-width:600px){
+  .setor-grid{grid-template-columns:repeat(4,1fr);}
+  .modal-ov{align-items:center;}
+  .modal{border-radius:14px;max-width:520px;width:calc(100% - 32px);}
+}
+@media(max-width:540px){
+  .setor-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .hdr{padding:10px 12px;}
+  .hdr-brand{font-size:17px;}
+  .lote-item{padding:10px 10px;}
+  .modal{border-radius:14px 14px 0 0;}
+  .modal-ov{align-items:flex-end;padding:0;}
+  .btn-full{padding:14px;font-size:15px;}
+  .os-bar{overflow-x:auto;flex-wrap:nowrap;}
+  #os-chips{flex-wrap:nowrap;}
+  .turno-grid{gap:8px;}
+}
+@media(max-width:380px){.setor-grid{grid-template-columns:1fr;}}
+@supports(padding:max(0px)){
+  .hdr{padding-top:max(12px,env(safe-area-inset-top));}
+  .content{padding-bottom:max(24px,env(safe-area-inset-bottom));}
+}
+
+/* Components */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.hdr-brand{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;
+  color:var(--accent);letter-spacing:2px;}
+.hdr-sub{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+/* Realtime status bar */
+#rt-bar{display:flex;align-items:center;gap:6px;background:var(--bg3);
+  border-bottom:1px solid var(--border);padding:5px 16px;font-size:10px;
+  color:var(--text3);letter-spacing:.5px;}
+#rt-status-txt{flex:1;}
+#rt-last{font-size:9px;color:var(--text3);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;
+  cursor:pointer;border:none;font-family:"Barlow",sans-serif;touch-action:manipulation;}
+.btn-p{background:var(--accent);color:#fff;}
+.btn-s{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+.btn-g{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.btn-full{width:100%;padding:15px;}
+.btn-sm{padding:7px 12px;font-size:12px;}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:11px 14px;font-size:15px;font-family:"Barlow",sans-serif;outline:none;}
+.inp:focus{border-color:var(--accent);}
+.lbl{display:block;font-size:10px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.field{margin-bottom:14px;}
+.content{padding:16px;max-width:860px;margin:0 auto;padding-bottom:32px;}
+.os-bar{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.os-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);
+  border:2px solid var(--border);border-radius:20px;padding:7px 14px;
+  font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;}
+.os-chip.active{border-color:var(--accent);color:var(--accent);}
+.setor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.setor-card{background:var(--panel);border:2px solid var(--border);border-radius:12px;
+  padding:18px 16px;cursor:pointer;touch-action:manipulation;transition:transform .1s,box-shadow .1s;}
+.setor-card:active{transform:scale(.98);}
+.setor-name{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;}
+.setor-info{font-size:11px;color:var(--text3);margin-top:4px;}
+.prog-track{background:var(--bg3);border-radius:99px;height:5px;overflow:hidden;margin-top:8px;}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s;}
+.lote-item{display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:8px;
+  padding:12px;margin-bottom:8px;border-left:3px solid var(--prep);cursor:pointer;touch-action:manipulation;}
+.lote-item.done{opacity:.5;cursor:default;border-left-color:var(--green);}
+.lote-chk{width:22px;height:22px;accent-color:var(--green);cursor:pointer;flex-shrink:0;}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sec-hdr h2{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:18px;}
+.sec-hdr::after{content:"";flex:1;height:1px;background:var(--border);}
+.turno-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.turno-card{display:flex;align-items:center;gap:8px;padding:12px;background:var(--bg3);
+  border-radius:8px;border:2px solid var(--border);cursor:pointer;touch-action:manipulation;transition:border-color .15s;}
+.turno-card input{width:16px;height:16px;flex-shrink:0;}
+.turno-auto-badge{background:rgba(34,197,94,.15);color:var(--green);
+  border:1px solid rgba(34,197,94,.3);border-radius:6px;padding:2px 8px;
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+  align-items:flex-end;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--bg2);border-radius:16px 16px 0 0;padding:20px;width:100%;
+  max-width:560px;max-height:92dvh;overflow-y:auto;}
+.modal-title{font-family:"Barlow Condensed",sans-serif;font-weight:900;font-size:20px;
+  color:var(--accent);margin-bottom:16px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--border);}
+.conc-card{display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg3);border:2px solid var(--border);border-radius:10px;
+  padding:16px;cursor:pointer;touch-action:manipulation;transition:all .2s;margin-bottom:12px;}
+.conc-icon{font-size:26px;flex-shrink:0;}
+.conc-badge{background:rgba(34,197,94,.15);color:var(--green);padding:5px 14px;
+  border-radius:20px;font-weight:700;font-size:13px;display:none;}
+#toast{position:fixed;bottom:24px;right:16px;z-index:999;display:flex;
+  flex-direction:column;gap:8px;pointer-events:none;max-width:320px;}
+.t{background:var(--panel);border:1px solid var(--border);color:var(--text);
+  padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;
+  border-left:3px solid var(--green);animation:slideIn .2s ease;}
+.t.err{border-left-color:var(--red);}
+.t.warn{border-left-color:var(--yellow);}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.filter-bar{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;margin-bottom:12px;}
+.info-card{background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px;border-left:3px solid var(--blue);}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
+.info-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.info-val{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:900;}
+.back-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+#login-screen{display:flex;position:fixed;inset:0;z-index:200;background:var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+.login-box{width:100%;max-width:400px;}
+.login-brand{text-align:center;margin-bottom:28px;}
+.login-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;}
+.login-config{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:14px;display:none;}
+
+/* Re-login overlay */
+#relogin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:300;align-items:center;justify-content:center;padding:20px;}
+#relogin-overlay.open{display:flex;}
+.relogin-box{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:24px;width:100%;max-width:380px;}
+
+@media(min-width:600px){
+  .setor-grid{grid-template-columns:repeat(4,1fr);}
+  .modal-ov{align-items:center;}
+  .modal{border-radius:14px;max-width:520px;width:calc(100% - 32px);}
+}
+.op-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.op-check-item{display:flex;align-items:center;gap:8px;background:var(--bg3);
+  border:2px solid var(--border);border-radius:8px;padding:9px 10px;
+  cursor:pointer;touch-action:manipulation;transition:border-color .15s,background .15s;}
+.op-check-item.selected{border-color:var(--accent);background:rgba(249,115,22,.08);}
+.op-check-item input{display:none;}
+.op-check-name{font-size:13px;font-weight:600;color:var(--text2);}
+.op-check-item.selected .op-check-name{color:var(--accent);}
+.op-check-mark{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;transition:all .15s;}
+.op-check-item.selected .op-check-mark{background:var(--accent);border-color:var(--accent);color:#fff;}
+.op-none-tag{font-size:11px;color:var(--text3);font-style:italic;padding:4px 0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:38px;color:var(--accent);letter-spacing:3px;">NODUS CALD</div>
+      <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Operador</div>
+    </div>
+    <div class="login-card">
+      <div class="field">
+        <label class="lbl">Email</label>
+        <input class="inp" id="login-email" type="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="lbl">Senha</label>
+        <input class="inp" id="login-senha" type="password" placeholder="..." autocomplete="current-password">
+      </div>
+      <div id="login-err" style="color:var(--red);font-size:13px;margin-bottom:12px;min-height:18px;text-align:center;"></div>
+      <button class="btn btn-p btn-full" id="login-btn" onclick="doLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RE-LOGIN (sessão expirada) -->
+<div id="relogin-overlay">
+  <div class="relogin-box">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--yellow);margin-bottom:4px;">Sessão Expirada</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:18px;">Digite sua senha para continuar</div>
+    <div class="field">
+      <label class="lbl">Email</label>
+      <input class="inp" id="rl-email" type="email" autocomplete="email" style="font-size:14px;">
+    </div>
+    <div class="field">
+      <label class="lbl">Senha</label>
+      <input class="inp" id="rl-senha" type="password" autocomplete="current-password" style="font-size:14px;">
+    </div>
+    <div id="rl-err" style="color:var(--red);font-size:12px;margin-bottom:12px;min-height:16px;"></div>
+    <button class="btn btn-p btn-full" id="rl-btn" onclick="doReLogin()">Reconectar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+  <div class="hdr">
+    <div>
+      <div class="hdr-brand">NODUS CALD</div>
+      <div class="hdr-sub">Operador</div>
+    </div>
+    <div class="hdr-right">
+      <div class="online-dot" id="online-dot"></div>
+      <span id="user-lbl" style="font-size:11px;color:var(--text2);"></span>
+      <button class="btn btn-s btn-sm" id="fs-btn" onclick="toggleFS()" title="Tela cheia" style="padding:7px 10px;font-size:16px;">⛶</button>
+      <button class="btn btn-s btn-sm" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- Realtime status bar -->
+  <div id="rt-bar">
+    <div class="online-dot" id="rt-dot" style="width:7px;height:7px;"></div>
+    <span id="rt-status-txt">Conectando...</span>
+    <span id="rt-last"></span>
+  </div>
+
+  <div class="content">
+    <div class="os-bar">
+      <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;flex-shrink:0;">OS:</span>
+      <div id="os-chips" style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+        <span style="color:var(--text3);font-size:12px;">Carregando...</span>
+      </div>
+      <button class="btn btn-s btn-sm" onclick="loadOS()">↺</button>
+    </div>
+
+    <div id="view-setores">
+      <div class="sec-hdr"><h2>Selecione o Setor</h2></div>
+      <div class="setor-grid" id="setor-grid"></div>
+    </div>
+
+    <div id="view-apt" style="display:none;">
+      <div class="back-bar">
+        <button class="btn btn-s btn-sm" onclick="voltarSetores()">← Voltar</button>
+        <div class="sec-hdr" style="margin-bottom:0;flex:1;" id="apt-title"></div>
+      </div>
+      <div class="turno-grid">
+        <label class="turno-card" id="card-d">
+          <input type="radio" name="turno" value="Diurno" id="turno-d" checked onchange="onTurno()">
+          <div>
+            <div style="font-weight:700;color:var(--blue);">Diurno</div>
+            <div style="font-size:10px;color:var(--text3);">07h–17h</div>
+          </div>
+          <div id="turno-d-badge" class="turno-auto-badge" style="display:none;">AUTO</div>
+        </label>
+        <label class="turno-card" id="card-n">
+          <input type="radio" name="turno" value="Noturno" id="turno-n" onchange="onTurno()">
+          <div>
+            <div style="font-weight:700;color:var(--acab);">Noturno</div>
+            <div style="font-size:10px;color:var(--text3);">19h–05h</div>
+          </div>
+          <div id="turno-n-badge" class="turno-auto-badge" style="display:none;">AUTO</div>
+        </label>
+      </div>
+      <div id="apt-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PREPARATIVO -->
+<div class="modal-ov" id="modal-prep">
+  <div class="modal">
+    <div class="modal-title">Apontamento — Preparativo</div>
+    <div class="field">
+      <label class="lbl">Operação</label>
+      <select class="inp" id="apt-op"></select>
+    </div>
+    <div class="field">
+      <label class="lbl">Lote</label>
+      <select class="inp" id="apt-lote" onchange="onAptLote()"></select>
+    </div>
+    <div class="info-card" id="apt-info" style="display:none;">
+      <div class="info-grid">
+        <div><div class="info-lbl">Qtd</div><div class="info-val" id="ai-qtd">-</div></div>
+        <div><div class="info-lbl">Peso/pc</div><div class="info-val" id="ai-pu" style="color:var(--yellow);">-</div></div>
+        <div><div class="info-lbl">Já Prod</div><div class="info-val" id="ai-prod" style="color:var(--accent);">-</div></div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="ai-bar" style="background:var(--green);width:0%;"></div></div>
+    </div>
+    <div class="conc-card" id="conc-card" onclick="toggleConc()">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="conc-icon" id="conc-icon">☐</span>
+        <div>
+          <div id="conc-lbl" style="font-weight:700;font-size:15px;">Marcar como Concluído</div>
+          <div style="font-size:11px;color:var(--text3);">100% da operação finalizada neste turno</div>
+        </div>
+      </div>
+      <div class="conc-badge" id="conc-badge">CONCLUÍDO</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Executado por <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+      <div class="op-check-grid" id="op-grid-prep">
+        <div class="op-none-tag">Carregando operadores...</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl">Observação</label>
+      <input class="inp" id="apt-obs" placeholder="Opcional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-prep')">Cancelar</button>
+      <button class="btn btn-p" onclick="savePrep()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SETOR -->
+<div class="modal-ov" id="modal-setor">
+  <div class="modal">
+    <div class="modal-title" id="modal-setor-title">Apontamento</div>
+    <div class="field">
+      <label class="lbl">Desenho</label>
+      <select class="inp" id="apt-des" onchange="onAptDes()"></select>
+    </div>
+    <div class="info-card" id="apt-des-info" style="display:none;">
+      <div id="apt-des-txt" style="font-size:13px;color:var(--text2);"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">Executado por <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+      <div class="op-check-grid" id="op-grid-setor">
+        <div class="op-none-tag">Carregando operadores...</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl">Observação</label>
+      <input class="inp" id="apt-setor-obs" placeholder="Opcional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-s" onclick="closeModal('modal-setor')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveSetor()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// NODUS CALD — Operador v2 | Vercel Edition
+// Melhorias: realtime completo (OS+apontamentos), auto-turno,
+// indicador live pulsante, re-login automático, filtros persistentes
+// ═══════════════════════════════════════════════════════════════
+
+var SB_URL   = 'https://sgohqvemeloyuqlarqng.supabase.co';
+var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnb2hxdmVtZWxveXVxbGFycW5nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjg0NjAsImV4cCI6MjA5MTg0NDQ2MH0.GY4PiSxRAgOurbDJW5BnikMwPMxnVTl17AeR5JmjoMo';
+var SB_TOKEN = localStorage.getItem('sb_token') || '';
+var SB_USER  = null;
+try { SB_USER = JSON.parse(localStorage.getItem('sb_user') || 'null'); } catch(e) {}
+
+var OS_LIST     = [];
+var OPERADORES  = [];
+var OS_ATUAL    = null;
+var LOTES       = [];
+var DESENHOS    = {};
+var APTS        = [];
+var SETOR_ATIVO = null;
+var CONC_ON     = false;
+var FILTER_MAT  = '';   // persiste filtro entre renders
+var FILTER_OP   = '';
+
+// ── Auto-detecção de turno ────────────────────────────────────
+function detectTurno() {
+  var h = new Date().getHours();
+  // Diurno: 07-17h | Noturno: 19-05h | gap 17-19h e 05-07h → diurno
+  return (h >= 19 || h < 5) ? 'Noturno' : 'Diurno';
+}
+
+function applyAutoTurno() {
+  var t = detectTurno();
+  var dEl = document.getElementById('turno-d');
+  var nEl = document.getElementById('turno-n');
+  var bdEl = document.getElementById('turno-d-badge');
+  var bnEl = document.getElementById('turno-n-badge');
+  if (t === 'Diurno') {
+    if (dEl) dEl.checked = true;
+    if (bdEl) bdEl.style.display = '';
+    if (bnEl) bnEl.style.display = 'none';
+  } else {
+    if (nEl) nEl.checked = true;
+    if (bnEl) bnEl.style.display = '';
+    if (bdEl) bdEl.style.display = 'none';
+  }
+  onTurno();
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  var d  = document.createElement('div');
+  d.className = 't' + (type === 'err' ? ' err' : type === 'warn' ? ' warn' : '');
+  d.textContent = msg;
+  el.appendChild(d);
+  setTimeout(function() { if (d.parentNode) d.parentNode.removeChild(d); }, 3500);
+}
+
+function openModal(id) { var el = document.getElementById(id); if (el) el.classList.add('open'); }
+function closeModal(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+  if (id === 'modal-prep') { resetConc(); resetOpGrid('op-grid-prep'); }
+  if (id === 'modal-setor') resetOpGrid('op-grid-setor');
+}
+
+function setOnline(v) {
+  var dot = document.getElementById('online-dot');
+  if (!dot) return;
+  dot.className = 'online-dot ' + (v ? 'live' : 'offline');
+}
+
+function getTurno() {
+  var el = document.getElementById('turno-d');
+  return el && el.checked ? 'Diurno' : 'Noturno';
+}
+
+function toggleCfg() {
+  var el = document.getElementById('login-config');
+  if (!el) return;
+  el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+}
+
+function onTurno() {
+  var d   = document.getElementById('turno-d');
+  var cd  = document.getElementById('card-d');
+  var cn  = document.getElementById('card-n');
+  var chk = d && d.checked;
+  if (cd) cd.style.borderColor = chk ? 'var(--blue)' : 'var(--border)';
+  if (cn) cn.style.borderColor = chk ? 'var(--border)' : 'var(--acab)';
+}
+
+// ── RT status bar ─────────────────────────────────────────────
+function setRTStatus(status, msg) {
+  // status: 'live' | 'offline' | 'sync'
+  var dot = document.getElementById('rt-dot');
+  var txt = document.getElementById('rt-status-txt');
+  if (!dot || !txt) return;
+  dot.className = 'online-dot ' + (status === 'live' ? 'live' : status === 'offline' ? 'offline' : '');
+  dot.style.width  = '7px';
+  dot.style.height = '7px';
+  txt.textContent  = msg;
+}
+
+function setRTLastUpdate() {
+  var el = document.getElementById('rt-last');
+  if (!el) return;
+  var now = new Date();
+  el.textContent = 'atualizado ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+}
+
+// ── Supabase ──────────────────────────────────────────────────
+function sbReq(method, path, body) {
+  var headers = {
+    'Content-Type':  'application/json',
+    'apikey':        SB_KEY,
+    'Authorization': 'Bearer ' + SB_TOKEN,
+    'Prefer':        method === 'PATCH' ? 'return=minimal' : 'return=representation'
+  };
+  var opts = { method: method, headers: headers };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(SB_URL + path, opts).then(function(r) {
+    if (r.status === 401) {
+      showReLogin();
+      throw new Error('session_expired');
+    }
+    if (!r.ok) {
+      return r.text().then(function(txt) {
+        var msg = txt;
+        try {
+          var j = JSON.parse(txt);
+          msg = j.message || j.error || j.hint || txt;
+          // coluna não existe no banco
+          if (msg && msg.indexOf('column') > -1 && msg.indexOf('does not exist') > -1) {
+            msg = 'Coluna ausente no banco. Execute o SQL de atualização no Supabase.';
+          }
+        } catch(e) {}
+        console.error('[sbReq] ' + method + ' ' + path + ' → ' + r.status + ': ' + msg);
+        throw new Error(msg);
+      });
+    }
+    var ct = r.headers.get('content-type') || '';
+    return ct.indexOf('json') > -1 ? r.json() : null;
+  });
+}
+
+// ── Re-login ──────────────────────────────────────────────────
+function showReLogin() {
+  var ov = document.getElementById('relogin-overlay');
+  var emailEl = document.getElementById('rl-email');
+  if (ov) ov.classList.add('open');
+  if (emailEl && SB_USER) emailEl.value = SB_USER.email || '';
+  var passEl = document.getElementById('rl-senha');
+  if (passEl) { passEl.value = ''; passEl.focus(); }
+}
+
+function doReLogin() {
+  var emailEl = document.getElementById('rl-email');
+  var passEl  = document.getElementById('rl-senha');
+  var errEl   = document.getElementById('rl-err');
+  var btn     = document.getElementById('rl-btn');
+  var email   = emailEl ? emailEl.value.trim() : '';
+  var senha   = passEl  ? passEl.value         : '';
+  if (!email || !senha) { if (errEl) errEl.textContent = 'Preencha email e senha'; return; }
+  if (btn) { btn.textContent = 'Reconectando...'; btn.disabled = true; }
+  if (errEl) errEl.textContent = '';
+
+  fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+    body:    JSON.stringify({ email: email, password: senha })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.access_token) throw new Error(data.error_description || 'Falha');
+    SB_TOKEN = data.access_token;
+    SB_USER  = data.user;
+    localStorage.setItem('sb_token', SB_TOKEN);
+    localStorage.setItem('sb_user',  JSON.stringify(SB_USER));
+    var ov = document.getElementById('relogin-overlay');
+    if (ov) ov.classList.remove('open');
+    if (btn) { btn.textContent = 'Reconectar'; btn.disabled = false; }
+    toast('Sessão renovada!');
+    setOnline(true);
+    stopRealtime();
+    startRealtime();
+  })
+  .catch(function(e) {
+    if (errEl) errEl.textContent = e.message || 'Erro';
+    if (btn) { btn.textContent = 'Reconectar'; btn.disabled = false; }
+  });
+}
+
+// ── Login ──────────────────────────────────────────────────────
+function doLogin() {
+  var emailEl = document.getElementById('login-email');
+  var senhaEl = document.getElementById('login-senha');
+  var btn     = document.getElementById('login-btn');
+  var err     = document.getElementById('login-err');
+
+  var email = emailEl ? emailEl.value.trim() : '';
+  var senha = senhaEl ? senhaEl.value        : '';
+
+  if (!email || !senha) { if (err) err.textContent = 'Preencha email e senha'; return; }
+
+  if (btn) { btn.textContent = 'Entrando...'; btn.disabled = true; }
+  if (err) err.textContent = '';
+
+  fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+    body:    JSON.stringify({ email: email, password: senha })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.access_token) throw new Error(data.error_description || data.msg || 'Login falhou');
+    SB_TOKEN = data.access_token;
+    SB_USER  = data.user;
+    localStorage.setItem('sb_token', SB_TOKEN);
+    localStorage.setItem('sb_user',  JSON.stringify(SB_USER));
+
+    var ls = document.getElementById('login-screen');
+    var ap = document.getElementById('app');
+    var ul = document.getElementById('user-lbl');
+    if (ls) ls.style.display = 'none';
+    if (ap) ap.style.display = 'block';
+    if (ul) ul.textContent = email.split('@')[0];
+
+    setOnline(true);
+    applyAutoTurno();
+    toast('Conectado!');
+    startRealtime();
+    setTimeout(flushQueue, 2000);
+    loadOS();
+    loadOperadores();
+  })
+  .catch(function(e) {
+    if (err) err.textContent = e.message || 'Erro de conexão';
+    if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+  });
+}
+
+function doLogout() {
+  if (!confirm('Deseja sair?')) return;
+  stopRealtime();
+  SB_TOKEN = '';
+  localStorage.removeItem('sb_token');
+  localStorage.removeItem('sb_user');
+  var ls = document.getElementById('login-screen');
+  var ap = document.getElementById('app');
+  if (ls) ls.style.display = 'flex';
+  if (ap) ap.style.display = 'none';
+  setOnline(false);
+}
+
+// ── OS List ───────────────────────────────────────────────────
+function loadOS() {
+  var chips = document.getElementById('os-chips');
+  if (chips) chips.innerHTML = '<span style="color:var(--text3);font-size:12px;">Carregando...</span>';
+  sbReq('GET', '/rest/v1/ordens?status=eq.ativa&order=criado.desc&select=id,numero,cliente,peso_total')
+  .then(function(ordens) {
+    OS_LIST = ordens || [];
+    renderChips();
+    if (OS_LIST.length === 1) selectOS(OS_LIST[0]);
+    else if (!OS_LIST.length) toast('Nenhuma OS ativa');
+  })
+  .catch(function(e) {
+    if (e.message === 'session_expired') return;
+    if (chips) chips.innerHTML = '<span style="color:var(--red);font-size:12px;">Erro: ' + e.message + '</span>';
+    setOnline(false);
+    setRTStatus('offline', 'Sem conexão');
+  });
+}
+
+// ── Operadores ────────────────────────────────────────────────
+function loadOperadores() {
+  sbReq('GET', '/rest/v1/operadores?ativo=eq.true&order=nome.asc&select=id,nome,setor,turno')
+  .then(function(ops) {
+    OPERADORES = ops || [];
+    fillOperadorSelects();
+  })
+  .catch(function() {
+    // fallback: tenta localStorage legado do supervisor
+    try {
+      var s = JSON.parse(localStorage.getItem('pt2') || '{}');
+      OPERADORES = (s.operadores || []).map(function(o) {
+        return { id: o.id, nome: o.nome, setor: o.setor, turno: o.turno };
+      });
+      fillOperadorSelects();
+    } catch(e) {}
+  });
+}
+
+function fillOperadorSelects() {
+  var grids = ['op-grid-prep', 'op-grid-setor'];
+  grids.forEach(function(gridId) {
+    var el = document.getElementById(gridId);
+    if (!el) return;
+    if (!OPERADORES.length) {
+      el.innerHTML = '<div class="op-none-tag">Nenhum operador cadastrado</div>';
+      return;
+    }
+    var html = '';
+    OPERADORES.forEach(function(o) {
+      html += '<div class="op-check-item" id="opchk-' + gridId + '-' + o.id + '" onclick="toggleOpCheck('' + gridId + '',' + o.id + ')">'
+        + '<div class="op-check-mark">✓</div>'
+        + '<span class="op-check-name">' + o.nome + '</span>'
+        + '</div>';
+    });
+    el.innerHTML = html;
+  });
+}
+
+function toggleOpCheck(gridId, opId) {
+  var el = document.getElementById('opchk-' + gridId + '-' + opId);
+  if (el) el.classList.toggle('selected');
+}
+
+function getSelectedOps(gridId) {
+  var el = document.getElementById(gridId);
+  if (!el) return '';
+  var selecionados = [];
+  el.querySelectorAll('.op-check-item.selected').forEach(function(item) {
+    var nameEl = item.querySelector('.op-check-name');
+    if (nameEl) selecionados.push(nameEl.textContent.trim());
+  });
+  return selecionados.join(', ');
+}
+
+function resetOpGrid(gridId) {
+  var el = document.getElementById(gridId);
+  if (!el) return;
+  el.querySelectorAll('.op-check-item').forEach(function(item) {
+    item.classList.remove('selected');
+  });
+}
+
+function renderChips() {
+  var el = document.getElementById('os-chips');
+  if (!el) return;
+  if (!OS_LIST.length) { el.innerHTML = '<span style="color:var(--text3);">Nenhuma OS</span>'; return; }
+  var html = '';
+  OS_LIST.forEach(function(os) {
+    var active = OS_ATUAL && OS_ATUAL.id === os.id ? ' active' : '';
+    html += '<div class="os-chip' + active + '" onclick="selectByNum(' + os.id + ')">'
+      + os.numero
+      + '<span style="color:var(--text3);font-weight:400;font-size:11px;margin-left:4px;">' + (os.cliente || '') + '</span>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function selectByNum(id) {
+  for (var i = 0; i < OS_LIST.length; i++) {
+    if (OS_LIST[i].id === id) { selectOS(OS_LIST[i]); return; }
+  }
+}
+
+function selectOS(os) {
+  OS_ATUAL = os;
+  renderChips();
+  toast('Carregando ' + os.numero + '...');
+  reloadOSDados();
+}
+
+// ── Reload OS completo (dados_json + apontamentos) ─────────────
+// Chamado tanto na seleção quanto pelo realtime quando a OS muda
+function reloadOSDados() {
+  if (!OS_ATUAL) return;
+  setRTStatus('sync', 'Sincronizando...');
+  sbReq('GET', '/rest/v1/ordens?id=eq.' + OS_ATUAL.id + '&select=dados_json')
+  .then(function(rows) {
+    var dados = (rows && rows[0] && rows[0].dados_json) || {};
+    if (typeof dados === 'string') { try { dados = JSON.parse(dados); } catch(e) { dados = {}; } }
+    LOTES    = dados.lotes    || [];
+    DESENHOS = dados.desenhos || {};
+    return sbReq('GET', '/rest/v1/apontamentos?os_id=eq.' + OS_ATUAL.id + '&order=ts.asc');
+  })
+  .then(function(apts) {
+    APTS = (apts || []).map(function(a) {
+      return { id: a.id, ts: a.ts, setor: a.setor, operacao: a.operacao,
+               material: a.material, comprimento: a.comprimento,
+               loteKey: a.lote_key, ref: a.ref, qtd: a.qtd,
+               pesoUnit: a.peso_unit, peso: a.peso, turno: a.turno };
+    });
+    if (SETOR_ATIVO) renderApt(SETOR_ATIVO);
+    renderSetores();
+    setRTStatus('live', 'Tempo real ativo');
+    setRTLastUpdate();
+    setOnline(true);
+    toast('OS ' + OS_ATUAL.numero + ' — ' + LOTES.length + ' lotes');
+  })
+  .catch(function(e) {
+    if (e.message === 'session_expired') return;
+    toast('Erro ao carregar OS: ' + e.message, 'err');
+    setRTStatus('offline', 'Sem conexão');
+  });
+}
+
+// Reload apenas apontamentos (mais leve, para eventos frequentes)
+function reloadApts() {
+  if (!OS_ATUAL) return;
+  sbReq('GET', '/rest/v1/apontamentos?os_id=eq.' + OS_ATUAL.id + '&order=ts.asc')
+  .then(function(apts) {
+    APTS = (apts || []).map(function(a) {
+      return { id: a.id, ts: a.ts, setor: a.setor, operacao: a.operacao,
+               material: a.material, comprimento: a.comprimento,
+               loteKey: a.lote_key, ref: a.ref, qtd: a.qtd,
+               pesoUnit: a.peso_unit, peso: a.peso, turno: a.turno };
+    });
+    if (SETOR_ATIVO) renderApt(SETOR_ATIVO);
+    renderSetores();
+    setRTLastUpdate();
+  })
+  .catch(function(){});
+}
+
+// ── Logic ─────────────────────────────────────────────────────
+function qtdProdOp(loteKey, op) {
+  var total = 0;
+  APTS.forEach(function(a) {
+    if (a.setor === 'Preparativo' && a.loteKey === loteKey && a.operacao === op)
+      total += (a.qtd || 0);
+  });
+  return total;
+}
+function loteOpOk(lote, op) {
+  return qtdProdOp(lote.material + '||' + lote.comprimento, op) >= lote.qtdTotal;
+}
+function lotePronto(lote) {
+  var ts = lote.tarefasSel || {};
+  var ops = Object.keys(ts).filter(function(k) { return ts[k]; });
+  if (!ops.length) return false;
+  for (var i = 0; i < ops.length; i++) { if (!loteOpOk(lote, ops[i])) return false; }
+  return true;
+}
+function opsDisp(lote) {
+  var ts = lote.tarefasSel || {};
+  return Object.keys(ts).filter(function(k) { return ts[k] && !loteOpOk(lote, k); });
+}
+function conclSet(setor) {
+  var s = {};
+  APTS.forEach(function(a) { if (a.setor === setor && a.ref) s[a.ref] = true; });
+  return s;
+}
+function libMont(cod) {
+  var ld = LOTES.filter(function(l) { return l.desenhos && l.desenhos.indexOf(cod) > -1; });
+  if (!ld.length) return true;
+  for (var i = 0; i < ld.length; i++) { if (!lotePronto(ld[i])) return false; }
+  return true;
+}
+function libSolda(cod) {
+  for (var i = 0; i < APTS.length; i++) {
+    if (APTS[i].setor === 'Montagem' && APTS[i].ref === cod) return true;
+  }
+  return false;
+}
+
+// ── Render setores ────────────────────────────────────────────
+function renderSetores() {
+  var CFG = [
+    { id: 'Preparativo', color: 'var(--prep)' },
+    { id: 'Montagem',    color: 'var(--mont)' },
+    { id: 'Solda',       color: 'var(--sold)' },
+    { id: 'Acabamento',  color: 'var(--acab)' }
+  ];
+  var totalLotes = LOTES.length;
+  var totalDes   = Object.keys(DESENHOS).length;
+  var el = document.getElementById('setor-grid');
+  if (!el) return;
+  var html = '';
+  CFG.forEach(function(s) {
+    var pct = 0; var info = '';
+    if (s.id === 'Preparativo') {
+      var done = 0;
+      LOTES.forEach(function(l) { if (lotePronto(l)) done++; });
+      pct  = totalLotes > 0 ? Math.round(done / totalLotes * 100) : 0;
+      info = done + '/' + totalLotes + ' lotes';
+    } else {
+      var cs   = conclSet(s.id);
+      var done = Object.keys(cs).length;
+      pct  = totalDes > 0 ? Math.round(done / totalDes * 100) : 0;
+      info = done + '/' + totalDes + ' desenhos';
+    }
+    var col = pct === 100 ? 'var(--green)' : s.color;
+    html += '<div class="setor-card" onclick="selSetor(\'' + s.id + '\')" style="border-color:' + col + '40;">'
+      + '<div style="font-size:22px;margin-bottom:6px;color:' + col + ';font-family:Barlow Condensed,sans-serif;font-weight:900;">' + s.id + '</div>'
+      + '<div class="setor-info">' + info + '</div>'
+      + '<div class="prog-track"><div class="prog-fill" style="width:' + pct + '%;background:' + col + ';"></div></div>'
+      + '<div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:right;">' + pct + '%</div>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function selSetor(setor) {
+  if (!OS_ATUAL) { toast('Selecione uma OS', 'err'); return; }
+  SETOR_ATIVO = setor;
+  var t = document.getElementById('apt-title');
+  if (t) t.innerHTML = '<h2>' + setor + '</h2>';
+  document.getElementById('view-setores').style.display = 'none';
+  document.getElementById('view-apt').style.display = '';
+  renderApt(setor);
+}
+
+function voltarSetores() {
+  SETOR_ATIVO = null;
+  document.getElementById('view-setores').style.display = '';
+  document.getElementById('view-apt').style.display = 'none';
+  renderSetores();
+}
+
+// ── Render apt ────────────────────────────────────────────────
+function renderApt(setor) {
+  var el = document.getElementById('apt-content');
+  if (!el) return;
+  if (setor === 'Preparativo') renderPrep(el);
+  else renderDesEl(el, setor);
+}
+
+function renderPrep(el) {
+  var pendentes = LOTES.filter(function(l) { return opsDisp(l).length > 0; });
+  var concl = 0; LOTES.forEach(function(l) { if (lotePronto(l)) concl++; });
+
+  // Restaurar filtros persistentes
+  var curMat = FILTER_MAT;
+  var curOp  = FILTER_OP;
+
+  var mats = [];
+  LOTES.forEach(function(l) { if (mats.indexOf(l.material) < 0) mats.push(l.material); });
+  mats.sort();
+
+  var filtrados = pendentes.filter(function(l) {
+    if (curMat && l.material !== curMat) return false;
+    if (curOp  && opsDisp(l).indexOf(curOp) < 0) return false;
+    return true;
+  });
+
+  var matOpts = '<option value="">Todos materiais</option>';
+  mats.forEach(function(m) { matOpts += '<option' + (m === curMat ? ' selected' : '') + '>' + m + '</option>'; });
+
+  var opOpts = '<option value="">Todas operações</option>';
+  ['Cortar comprimento','Tracagem','Corte furo','Corte','Dobra'].forEach(function(op) {
+    opOpts += '<option' + (op === curOp ? ' selected' : '') + '>' + op + '</option>';
+  });
+
+  var html = '<div class="filter-bar">'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
+    + '<select class="inp" id="f-mat" onchange="onFilter()" style="flex:1;padding:7px 10px;font-size:12px;">' + matOpts + '</select>'
+    + '<select class="inp" id="f-op"  onchange="onFilter()" style="flex:1;padding:7px 10px;font-size:12px;">' + opOpts + '</select>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+    + '<span id="sel-count" style="font-size:11px;color:var(--text3);">0 selecionados</span>'
+    + '<div style="margin-left:auto;display:flex;gap:8px;">'
+    + '<button class="btn btn-s btn-sm" onclick="selTodos()">Sel. Todos</button>'
+    + '<button class="btn btn-g btn-sm" id="btn-bulk" onclick="concluirSel()" style="display:none;">Concluir Sel.</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">'
+    + filtrados.length + '/' + pendentes.length + ' pendentes — ' + concl + '/' + LOTES.length + ' concluídos'
+    + '</div>';
+
+  if (!filtrados.length) {
+    html += '<div style="text-align:center;padding:32px;color:var(--green);font-size:16px;">✓ Todos os lotes concluídos!</div>';
+  } else {
+    filtrados.forEach(function(l) {
+      var idx = LOTES.indexOf(l);
+      var ops = opsDisp(l);
+      var key = l.material + '||' + l.comprimento;
+      var fp  = ops[0] || '';
+      var pq  = fp ? qtdProdOp(key, fp) : 0;
+      var pct = l.qtdTotal > 0 ? Math.round(pq / l.qtdTotal * 100) : 0;
+      var dobra = l.temDobra ? ' [DOBRA]' : '';
+      var pctCol = pct > 0 ? 'var(--yellow)' : 'var(--text3)';
+      html += '<div class="lote-item">'
+        + '<input type="checkbox" class="lote-chk" data-idx="' + idx + '" onchange="updSel()" onclick="event.stopPropagation();" style="cursor:pointer;flex-shrink:0;">'
+        + '<div style="flex:1;cursor:pointer;min-width:0;" onclick="abrirPrep(' + idx + ')">'
+        + '<div style="font-size:12px;color:var(--blue);font-weight:700;">' + l.material + dobra + '</div>'
+        + '<div style="font-size:11px;color:var(--text3);">' + l.comprimento + 'mm — ' + l.qtdTotal + ' pcs — ' + l.pesoTotal.toFixed(1) + ' kg</div>'
+        + '<div style="font-size:11px;color:var(--accent);">' + ops.join(' / ') + '</div>'
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0;cursor:pointer;padding-left:8px;" onclick="abrirPrep(' + idx + ')">'
+        + '<div style="font-size:14px;font-weight:700;color:' + pctCol + ';">' + pct + '%</div>'
+        + '<div style="font-size:10px;color:var(--text3);">' + pq + '/' + l.qtdTotal + '</div>'
+        + '</div>'
+        + '</div>';
+    });
+  }
+  el.innerHTML = html;
+}
+
+// Persiste filtros ao mudar
+function onFilter() {
+  var fmatEl = document.getElementById('f-mat');
+  var fopEl  = document.getElementById('f-op');
+  FILTER_MAT = fmatEl ? fmatEl.value : '';
+  FILTER_OP  = fopEl  ? fopEl.value  : '';
+  renderPrep(document.getElementById('apt-content'));
+}
+
+function renderDesEl(el, setor) {
+  var COLORS = { Montagem: 'var(--mont)', Solda: 'var(--sold)', Acabamento: 'var(--acab)' };
+  var cor = COLORS[setor] || 'var(--blue)';
+  var cs  = conclSet(setor);
+  var todos = Object.keys(DESENHOS).sort();
+
+  var liberados = todos.filter(function(cod) {
+    return setor === 'Montagem' ? libMont(cod) : setor === 'Solda' ? libSolda(cod) : true;
+  });
+  var pendentes = liberados.filter(function(cod) { return !cs[cod]; });
+  var feitos    = liberados.filter(function(cod) { return  cs[cod]; });
+  var bloq = todos.length - liberados.length;
+
+  var html = '<div style="font-size:12px;color:var(--text3);margin-bottom:12px;">'
+    + pendentes.length + ' pendentes — ' + feitos.length + ' concluídos'
+    + (bloq > 0 ? ' — ' + bloq + ' bloqueados' : '') + '</div>';
+
+  if (bloq > 0) {
+    html += '<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);'
+      + 'border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text3);">'
+      + bloq + ' aguardam ' + (setor === 'Montagem' ? 'Preparativo' : 'Montagem') + '</div>';
+  }
+
+  if (!pendentes.length && feitos.length) {
+    html += '<div style="text-align:center;padding:24px;color:var(--green);font-size:16px;">✓ Todos concluídos!</div>';
+  }
+
+  pendentes.forEach(function(cod) {
+    var d = DESENHOS[cod] || {};
+    var itens = d.itens ? d.itens.length : 0;
+    var peso  = d.pesoTotal ? d.pesoTotal.toFixed(1) : '0';
+    html += '<div class="lote-item" data-setor="' + setor + '" data-cod="' + cod + '" onclick="clickDes(this)" style="border-left-color:' + cor + ';">'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:12px;color:var(--blue);font-weight:700;">' + cod + '</div>'
+      + '<div style="font-size:11px;color:var(--text3);">' + itens + ' mat — ' + peso + ' kg</div>'
+      + '</div>'
+      + '<span style="font-size:18px;flex-shrink:0;color:' + cor + ';">▶</span>'
+      + '</div>';
+  });
+
+  if (feitos.length) {
+    html += '<div style="font-size:10px;color:var(--text3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:1px;">Concluídos (' + feitos.length + ')</div>';
+    feitos.forEach(function(cod) {
+      html += '<div class="lote-item done">'
+        + '<span style="font-size:11px;color:var(--text3);">' + cod + '</span>'
+        + '<span style="margin-left:auto;font-size:16px;color:var(--green);">✓</span>'
+        + '</div>';
+    });
+  }
+  el.innerHTML = html;
+}
+
+// ── Modais ────────────────────────────────────────────────────
+function clickDes(elDiv) {
+  var setor = elDiv.getAttribute('data-setor');
+  var cod   = elDiv.getAttribute('data-cod');
+  if (!setor || !cod) return;
+  document.getElementById('modal-setor-title').textContent = setor;
+  var cs = conclSet(setor);
+  var todos = Object.keys(DESENHOS).filter(function(c) {
+    var ok = setor === 'Montagem' ? libMont(c) : setor === 'Solda' ? libSolda(c) : true;
+    return ok && !cs[c];
+  }).sort();
+  var selEl = document.getElementById('apt-des');
+  var opts = '';
+  todos.forEach(function(c) {
+    opts += '<option value="' + c + '"' + (c === cod ? ' selected' : '') + '>' + c + '</option>';
+  });
+  selEl.innerHTML = opts || '<option>Nenhum disponível</option>';
+  selEl.value = cod;
+  onAptDes();
+  var obsEl = document.getElementById('apt-setor-obs');
+  if (obsEl) obsEl.value = '';
+  openModal('modal-setor');
+}
+
+function onAptDes() {
+  var cod = document.getElementById('apt-des').value;
+  var d   = DESENHOS[cod];
+  var infoEl = document.getElementById('apt-des-info');
+  var txtEl  = document.getElementById('apt-des-txt');
+  if (!d) { if (infoEl) infoEl.style.display = 'none'; return; }
+  if (infoEl) infoEl.style.display = '';
+  if (txtEl)  txtEl.textContent = cod + ' — ' + (d.itens ? d.itens.length : 0) + ' materiais — ' + ((d.pesoTotal || 0).toFixed(1)) + ' kg';
+}
+
+function abrirPrep(idx) {
+  var lote = LOTES[idx];
+  if (!lote) return;
+  var ops = opsDisp(lote);
+  if (!ops.length) { toast('Já concluído!'); return; }
+  var avail = [];
+  LOTES.forEach(function(l, i) {
+    var o = opsDisp(l);
+    if (o.length) avail.push({ i: i, l: l, ops: o });
+  });
+  var selLote = document.getElementById('apt-lote');
+  var opts = '';
+  avail.forEach(function(a) {
+    opts += '<option value="' + a.i + '"' + (a.i === idx ? ' selected' : '') + '>'
+      + a.l.material + ' | ' + a.l.comprimento + 'mm | ' + a.l.qtdTotal + ' pcs</option>';
+  });
+  selLote.innerHTML = opts || '<option>Nenhum</option>';
+  selLote.value = idx;
+  onAptLote();
+  resetConc();
+  var obsEl = document.getElementById('apt-obs');
+  if (obsEl) obsEl.value = '';
+  openModal('modal-prep');
+}
+
+function onAptLote() {
+  var selEl = document.getElementById('apt-lote');
+  var idx   = parseInt(selEl ? selEl.value : '0');
+  var lote  = LOTES[idx];
+  var infoEl = document.getElementById('apt-info');
+  if (!lote) { if (infoEl) infoEl.style.display = 'none'; return; }
+  var ops = opsDisp(lote);
+  var opEl = document.getElementById('apt-op');
+  if (opEl) {
+    var oo = '';
+    ops.forEach(function(op) { oo += '<option>' + op + '</option>'; });
+    opEl.innerHTML = oo || '<option>-</option>';
+  }
+  var key  = lote.material + '||' + lote.comprimento;
+  var fop  = ops[0] || '';
+  var prod = fop ? qtdProdOp(key, fop) : 0;
+  var pct  = lote.qtdTotal > 0 ? Math.round(prod / lote.qtdTotal * 100) : 0;
+  if (infoEl) infoEl.style.display = '';
+  var qtdEl = document.getElementById('ai-qtd');
+  var puEl  = document.getElementById('ai-pu');
+  var prEl  = document.getElementById('ai-prod');
+  var barEl = document.getElementById('ai-bar');
+  if (qtdEl) qtdEl.textContent = lote.qtdTotal + ' pcs';
+  if (puEl)  puEl.textContent  = lote.pesoUnit.toFixed(4) + ' kg';
+  if (prEl)  prEl.textContent  = prod + ' (' + pct + '%)';
+  if (barEl) barEl.style.width = pct + '%';
+}
+
+function toggleConc() {
+  CONC_ON = !CONC_ON;
+  var icon  = document.getElementById('conc-icon');
+  var lbl   = document.getElementById('conc-lbl');
+  var badge = document.getElementById('conc-badge');
+  var card  = document.getElementById('conc-card');
+  if (icon)  icon.textContent  = CONC_ON ? '☑' : '☐';
+  if (lbl)   { lbl.textContent = CONC_ON ? 'Concluído!' : 'Marcar como Concluído'; lbl.style.color = CONC_ON ? 'var(--green)' : 'var(--text)'; }
+  if (badge) badge.style.display = CONC_ON ? 'block' : 'none';
+  if (card)  { card.style.borderColor = CONC_ON ? 'var(--green)' : 'var(--border)'; card.style.background = CONC_ON ? 'rgba(34,197,94,.08)' : 'var(--bg3)'; }
+}
+
+function resetConc() {
+  CONC_ON = false;
+  var icon  = document.getElementById('conc-icon');
+  var lbl   = document.getElementById('conc-lbl');
+  var badge = document.getElementById('conc-badge');
+  var card  = document.getElementById('conc-card');
+  if (icon)  icon.textContent  = '☐';
+  if (lbl)   { lbl.textContent = 'Marcar como Concluído'; lbl.style.color = 'var(--text)'; }
+  if (badge) badge.style.display = 'none';
+  if (card)  { card.style.borderColor = 'var(--border)'; card.style.background = 'var(--bg3)'; }
+}
+
+// ── Save ──────────────────────────────────────────────────────
+var OFFLINE_QUEUE_KEY = 'nodus_offline_queue';
+function loadQueue() { try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); } catch(e) { return []; } }
+function saveQueue(q) { try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(q)); } catch(e) {} }
+function addToQueue(apt) {
+  var q = loadQueue();
+  apt._queueId = Date.now() + '_' + Math.random().toString(36).slice(2);
+  q.push(apt);
+  saveQueue(q);
+  toast('⚠ Sem conexão — salvo localmente (' + q.length + ' na fila)', 'warn');
+}
+
+async function flushQueue() {
+  var q = loadQueue();
+  if (!q.length || !SB_TOKEN || !OS_ATUAL) return;
+  var failed = [];
+  for (var i = 0; i < q.length; i++) {
+    var apt = q[i];
+    try {
+      var payload = Object.assign({}, apt);
+      delete payload._queueId;
+      await sbReq('POST', '/rest/v1/apontamentos', payload);
+      APTS.push({ id: null, ts: apt.ts, setor: apt.setor, operacao: apt.operacao,
+        material: apt.material, comprimento: apt.comprimento, loteKey: apt.lote_key,
+        ref: apt.ref, qtd: apt.qtd, pesoUnit: apt.peso_unit, peso: apt.peso, turno: apt.turno });
+    } catch(e) {
+      if (e.message !== 'session_expired') failed.push(apt);
+    }
+  }
+  saveQueue(failed);
+  if (failed.length === 0 && q.length > 0) {
+    toast('✅ ' + q.length + ' apontamentos enviados!');
+    if (SETOR_ATIVO) renderApt(SETOR_ATIVO);
+    renderSetores();
+  } else if (failed.length > 0) {
+    toast('⚠ ' + failed.length + ' apontamentos na fila', 'warn');
+  }
+}
+
+window.addEventListener('online', function() {
+  toast('Conexão restaurada — sincronizando...');
+  setOnline(true);
+  setTimeout(flushQueue, 1000);
+  stopRealtime();
+  startRealtime();
+});
+window.addEventListener('offline', function() {
+  setOnline(false);
+  setRTStatus('offline', 'Sem conexão');
+});
+
+setInterval(function() {
+  var q = loadQueue();
+  if (q.length > 0 && SB_TOKEN && OS_ATUAL) flushQueue();
+}, 30000);
+
+function savePrep() {
+  if (!CONC_ON) { toast('Marque como concluído primeiro', 'err'); return; }
+  var selEl = document.getElementById('apt-lote');
+  var opEl  = document.getElementById('apt-op');
+  var obsEl = document.getElementById('apt-obs');
+  var idx   = parseInt(selEl ? selEl.value : '0');
+  var lote  = LOTES[idx];
+  var op    = opEl  ? opEl.value  : '';
+  var obs   = obsEl ? obsEl.value : '';
+  var opNome = getSelectedOps('op-grid-prep');
+  if (!lote || !op) { toast('Selecione lote e operação', 'err'); return; }
+
+  var key    = lote.material + '||' + lote.comprimento;
+  var jaProd = qtdProdOp(key, op);
+  var qtd    = Math.max(0, lote.qtdTotal - jaProd);
+  if (qtd <= 0) { toast('Já concluído!', 'err'); return; }
+
+  var ts    = lote.tarefasSel || {};
+  var ops   = Object.keys(ts).filter(function(k) { return ts[k]; });
+  var outrasConc = 0;
+  ops.forEach(function(o2) { if (o2 !== op && loteOpOk(lote, o2)) outrasConc++; });
+  var isLast = outrasConc === ops.length - 1;
+  var peso   = isLast ? lote.pesoTotal : 0;
+  var ref    = op + ': ' + lote.material + ' | ' + lote.comprimento + 'mm';
+
+  var apt = {
+    os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
+    operador_nome: opNome,
+    setor: 'Preparativo', operacao: op, material: lote.material,
+    comprimento: lote.comprimento, lote_key: key, ref: ref, qtd: qtd,
+    peso_unit: lote.pesoUnit, peso: peso, turno: getTurno(), obs: obs,
+    em_aberto: false, modo: 'concluido', ts: new Date().toISOString()
+  };
+
+  sbReq('POST', '/rest/v1/apontamentos', apt)
+  .then(function(res) {
+    var nr = Array.isArray(res) ? res[0] : res;
+    APTS.push({ id: nr && nr.id, ts: apt.ts, setor: apt.setor, operacao: apt.operacao,
+      material: apt.material, comprimento: apt.comprimento, loteKey: key, ref: apt.ref,
+      qtd: apt.qtd, pesoUnit: apt.peso_unit, peso: apt.peso, turno: apt.turno });
+    closeModal('modal-prep');
+    toast(op + ' concluído! ' + qtd + ' pcs — ' + peso.toFixed(2) + ' kg');
+    renderApt('Preparativo');
+    renderSetores();
+  })
+  .catch(function(e) {
+    if (e.message === 'session_expired') return;
+    // Se for erro de coluna ausente, avisa mas não salva na fila
+    if (e.message && e.message.indexOf('Coluna ausente') > -1) {
+      toast('Erro: ' + e.message, 'err');
+      return;
+    }
+    toast('Sem conexão — salvo localmente', 'warn');
+    addToQueue(apt);
+    closeModal('modal-prep');
+    renderApt('Preparativo');
+    renderSetores();
+  });
+}
+
+function saveSetor() {
+  var setor  = SETOR_ATIVO;
+  var desEl  = document.getElementById('apt-des');
+  var obsEl  = document.getElementById('apt-setor-obs');
+  var cod    = desEl ? desEl.value : '';
+  var obs    = obsEl ? obsEl.value : '';
+  var opNomeSetor = getSelectedOps('op-grid-setor');
+  if (!cod) { toast('Selecione um desenho', 'err'); return; }
+  var d = DESENHOS[cod] || {};
+  var apt = {
+    os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
+    operador_nome: opNomeSetor,
+    setor: setor, ref: cod, qtd: 1, peso_unit: 0,
+    peso: d.pesoTotal || 0, turno: getTurno(), obs: obs,
+    em_aberto: false, modo: 'concluido', ts: new Date().toISOString()
+  };
+  sbReq('POST', '/rest/v1/apontamentos', apt)
+  .then(function(res) {
+    var nr = Array.isArray(res) ? res[0] : res;
+    APTS.push({ id: nr && nr.id, ts: apt.ts, setor: apt.setor, ref: apt.ref,
+      qtd: 1, peso: apt.peso, turno: apt.turno });
+    closeModal('modal-setor');
+    toast(cod + ' concluído em ' + setor + '!');
+    renderApt(setor);
+    renderSetores();
+  })
+  .catch(function(e) {
+    if (e.message === 'session_expired') return;
+    if (e.message && e.message.indexOf('Coluna ausente') > -1) {
+      toast('Erro: ' + e.message, 'err');
+      return;
+    }
+    toast('Sem conexão — salvo localmente', 'warn');
+    addToQueue(apt);
+    closeModal('modal-setor');
+    renderApt(setor);
+    renderSetores();
+  });
+}
+
+// ── Bulk ──────────────────────────────────────────────────────
+function updSel() {
+  var chks = document.querySelectorAll('.lote-chk:checked');
+  var cnt  = chks.length;
+  var el   = document.getElementById('sel-count');
+  var btn  = document.getElementById('btn-bulk');
+  if (el)  el.textContent    = cnt + ' selecionados';
+  if (btn) btn.style.display = cnt > 0 ? '' : 'none';
+}
+
+function selTodos() {
+  var chks   = document.querySelectorAll('.lote-chk');
+  var allChk = true;
+  chks.forEach(function(c) { if (!c.checked) allChk = false; });
+  chks.forEach(function(c) { c.checked = !allChk; });
+  updSel();
+}
+
+function concluirSel() {
+  var chks = document.querySelectorAll('.lote-chk:checked');
+  if (!chks.length) { toast('Nenhum selecionado', 'err'); return; }
+  var btn = document.getElementById('btn-bulk');
+  if (btn) { btn.textContent = 'Salvando...'; btn.disabled = true; }
+  var turno = getTurno();
+  var novos = [];
+  chks.forEach(function(chk) {
+    var idx  = parseInt(chk.getAttribute('data-idx'));
+    var lote = LOTES[idx];
+    if (!lote) return;
+    var ts2 = lote.tarefasSel || {};
+    var ops = Object.keys(ts2).filter(function(k) { return ts2[k]; });
+    ops.forEach(function(op, opI) {
+      var key    = lote.material + '||' + lote.comprimento;
+      var jaProd = qtdProdOp(key, op);
+      novos.forEach(function(a) { if (a.lote_key === key && a.operacao === op) jaProd += (a.qtd || 0); });
+      var qtd = Math.max(0, lote.qtdTotal - jaProd);
+      if (qtd <= 0) return;
+      var isLast = opI === ops.length - 1;
+      novos.push({
+        os_id: OS_ATUAL.id, user_email: SB_USER ? SB_USER.email : 'operador',
+        setor: 'Preparativo', operacao: op, material: lote.material,
+        comprimento: lote.comprimento, lote_key: key,
+        ref: op + ': ' + lote.material + ' | ' + lote.comprimento + 'mm',
+        qtd: qtd, peso_unit: lote.pesoUnit, peso: isLast ? lote.pesoTotal : 0,
+        turno: turno, obs: 'Lote', em_aberto: false, modo: 'concluido',
+        ts: new Date().toISOString()
+      });
+    });
+  });
+  if (!novos.length) {
+    toast('Todos já concluídos!');
+    if (btn) { btn.textContent = 'Concluir Sel.'; btn.disabled = false; }
+    return;
+  }
+  var batches = [];
+  for (var i = 0; i < novos.length; i += 50) batches.push(novos.slice(i, i + 50));
+  function insere(bi) {
+    if (bi >= batches.length) {
+      toast(chks.length + ' lotes concluídos!');
+      if (btn) { btn.textContent = 'Concluir Sel.'; btn.disabled = false; }
+      renderApt('Preparativo');
+      renderSetores();
+      return;
+    }
+    sbReq('POST', '/rest/v1/apontamentos', batches[bi])
+    .then(function(res) {
+      var arr = Array.isArray(res) ? res : [res];
+      arr.forEach(function(r, j) {
+        var a = batches[bi][j];
+        if (a) APTS.push({ id: r && r.id, ts: a.ts, setor: a.setor, operacao: a.operacao,
+          material: a.material, comprimento: a.comprimento, loteKey: a.lote_key,
+          ref: a.ref, qtd: a.qtd, pesoUnit: a.peso_unit, peso: a.peso, turno: a.turno });
+      });
+      insere(bi + 1);
+    })
+    .catch(function(e) {
+      if (e.message !== 'session_expired') toast('Erro: ' + e.message, 'err');
+      if (btn) { btn.textContent = 'Concluir Sel.'; btn.disabled = false; }
+    });
+  }
+  insere(0);
+}
+
+// ── Realtime Supabase ─────────────────────────────────────────
+var _rtWS = null; var _rtHB = null; var _rtRef = 1;
+
+function stopRealtime() {
+  clearInterval(_rtHB);
+  if (_rtWS) { _rtWS.onclose = null; _rtWS.close(); _rtWS = null; }
+}
+
+function startRealtime() {
+  if (!SB_URL || !SB_KEY || !SB_TOKEN) return;
+  if (_rtWS && _rtWS.readyState <= 1) return;
+  var wsUrl = SB_URL.replace('https://','wss://').replace('http://','ws://')
+    + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
+  try { _rtWS = new WebSocket(wsUrl); } catch(e) { setRTStatus('offline','Realtime indisponível'); return; }
+
+  _rtWS.onopen = function() {
+    // Inscreve em mudanças de apontamentos E ordens
+    _rtWS.send(JSON.stringify({
+      topic:   'realtime:public',
+      event:   'phx_join',
+      payload: { config: { postgres_changes: [
+        { event: '*', schema: 'public', table: 'apontamentos' },
+        { event: '*', schema: 'public', table: 'ordens'       }
+      ]}},
+      ref: String(_rtRef++)
+    }));
+    _rtHB = setInterval(function() {
+      if (_rtWS && _rtWS.readyState === 1)
+        _rtWS.send(JSON.stringify({ topic:'phoenix', event:'heartbeat', payload:{}, ref:String(_rtRef++) }));
+    }, 25000);
+    setRTStatus('live', 'Tempo real ativo');
+    setOnline(true);
+  };
+
+  _rtWS.onmessage = function(evt) {
+    try {
+      var msg = JSON.parse(evt.data);
+      if (!OS_ATUAL) return;
+      if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.type)) {
+        var table = (msg.payload && msg.payload.data && msg.payload.data.table) || '';
+        if (table === 'ordens') {
+          // OS mudou — recarrega dados completos
+          reloadOSDados();
+        } else {
+          // Só apontamentos — reload leve
+          reloadApts();
+        }
+        setRTLastUpdate();
+      }
+    } catch(e) {}
+  };
+
+  _rtWS.onerror = function() {
+    setRTStatus('offline', 'Erro no realtime');
+  };
+
+  _rtWS.onclose = function() {
+    clearInterval(_rtHB); _rtWS = null;
+    setRTStatus('offline', 'Reconectando...');
+    setTimeout(function() { if (SB_TOKEN) startRealtime(); }, 5000);
+  };
+}
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  applyAutoTurno();
+
+  if (SB_TOKEN && SB_URL && SB_KEY) {
+    fetch(SB_URL + '/rest/v1/ordens?limit=1', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_TOKEN }
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('expirado');
+      var ls = document.getElementById('login-screen');
+      var ap = document.getElementById('app');
+      var ul = document.getElementById('user-lbl');
+      if (ls) ls.style.display = 'none';
+      if (ap) ap.style.display = 'block';
+      if (ul && SB_USER) ul.textContent = SB_USER.email.split('@')[0];
+      setOnline(true);
+      toast('Sessão restaurada');
+      startRealtime();
+      setTimeout(flushQueue, 2000);
+      loadOS();
+      loadOperadores();
+    })
+    .catch(function() {
+      SB_TOKEN = '';
+      localStorage.removeItem('sb_token');
+    });
+  }
+});
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  .then(function(reg) { console.log('SW OK', reg.scope); })
+  .catch(function(e)  { console.log('SW err', e); });
+}
+
+// Fullscreen automático no primeiro toque
+var _fsTriggered = false;
+document.addEventListener('touchstart', function() {
+  if (!_fsTriggered && !document.fullscreenElement && !document.webkitFullscreenElement) {
+    _fsTriggered = true;
+    var req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+    if (req) req.call(document.documentElement).catch(function(){});
+  }
+}, { once: false });
+
+function toggleFS() {
+  var el = document.documentElement;
+  var isFS = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!isFS) {
+    var req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) req.call(el);
+  } else {
+    var ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (ex) ex.call(document);
+  }
+}
+document.addEventListener('fullscreenchange', function() {
+  var btn = document.getElementById('fs-btn');
+  if (btn) btn.textContent = document.fullscreenElement ? '✕' : '⛶';
+});
+document.addEventListener('webkitfullscreenchange', function() {
+  var btn = document.getElementById('fs-btn');
+  if (btn) btn.textContent = document.webkitFullscreenElement ? '✕' : '⛶';
+});
+
+var deferredPrompt;
+window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault(); deferredPrompt = e; });
+</script>
+</body>
+</html>
